@@ -27,3 +27,29 @@
   for = "/assets/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+# Form handling
+[[headers]]
+  for = "/"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+
+# Enable form processing
+[build.processing]
+  skip_processing = false
+
+# Form settings
+[build.processing.css]
+  bundle = true
+  minify = true
+
+[build.processing.js]
+  bundle = true
+  minify = true
+
+[build.processing.html]
+  pretty_urls = true
+
+# Environment variables for forms
+[context.production.environment]
+  NETLIFY_FORMS_ENABLED = "true"

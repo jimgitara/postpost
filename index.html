@@ -63,7 +63,20 @@
     <!-- Accessibility -->
     <meta name="color-scheme" content="dark" />
     
-    <!-- Hidden Netlify Forms -->
+    <!-- Netlify Forms -->
+    <form name="contact" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="name" />
+      <input type="email" name="email" />
+      <select name="subject">
+        <option value="general">Opća pitanja</option>
+        <option value="technical">Tehnička podrška</option>
+        <option value="billing">Naplata</option>
+        <option value="feedback">Povratne informacije</option>
+        <option value="partnership">Partnerstvo</option>
+      </select>
+      <textarea name="message"></textarea>
+    </form>
+    
     <form name="postcard" netlify netlify-honeypot="bot-field" hidden>
       <input type="text" name="recipient_name" />
       <input type="email" name="recipient_email" />

@@ -16,6 +16,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
   const [showBack, setShowBack] = useState(false);
   const [autoSaved, setAutoSaved] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
   const [customization, setCustomization] = useState<PostcardCustomization>({
     frontText: 'Pozdrav iz prekrasnog mjesta!',
     frontTextColor: '#ffffff',
@@ -45,6 +46,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
   const updateCustomization = (updates: Partial<PostcardCustomization>) => {
     console.log('Updating customization:', updates);
     setCustomization(prev => ({ ...prev, ...updates }));
+    setSendError(null); // Clear any previous errors
     
     // Auto-save simulation
     setTimeout(() => {
@@ -57,15 +59,29 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
     console.log('Validating form, step:', step, 'customization:', customization);
     
     if (step === 'send') {
-      if (!customization.recipientEmail || !customization.senderName) {
-        alert('Molimo unesite email primatelja i vaše ime.');
+      if (!customization.recipientEmail?.trim()) {
+        setSendError('Email primatelja je obavezan');
         return false;
       }
-      if (!customization.recipientEmail.includes('@')) {
-        alert('Molimo unesite valjanu email adresu.');
+      if (!customization.senderName?.trim()) {
+        setSendError('Vaše ime je obavezno');
+        return false;
+      }
+      if (!customization.recipientEmail.includes('@') || !customization.recipientEmail.includes('.')) {
+        setSendError('Molimo unesite valjanu email adresu');
+        return false;
+      }
+      if (customization.recipientEmail.length < 5) {
+        setSendError('Email adresa je prekratka');
+        return false;
+      }
+      if (customization.senderName.length < 2) {
+        setSendError('Ime mora imati najmanje 2 znaka');
         return false;
       }
     }
+    
+    setSendError(null);
     return true;
   };
 
@@ -116,6 +132,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
     }
     
     setIsSending(true);
+    setSendError(null);
     console.log('Starting to send postcard...');
     
     try {
@@ -127,11 +144,15 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
       });
       
       console.log('Postcard sent successfully');
-      alert(`Razglednica je uspješno poslana na ${customization.recipientEmail}!\nPrimatelj će uskoro dobiti vašu prekrasnu razglednicu.`);
+      alert(`✅ Razglednica je uspješno poslana!\n\n📧 Primatelj: ${customization.recipientEmail}\n👤 Od: ${customization.senderName}\n\nPrimatelj će uskoro dobiti vašu prekrasnu razglednicu u svom email sandučiću.`);
       onBack();
     } catch (error) {
       console.error('Error sending postcard:', error);
-      alert('Dogodila se greška pri slanju razglednice. Molimo pokušajte ponovno.');
+      const errorMessage = error instanceof Error ? error.message : 'Nepoznata greška';
+      setSendError(errorMessage);
+      
+      // Show user-friendly error message
+      alert(`❌ Greška pri slanju razglednice:\n\n${errorMessage}\n\nMolimo pokušajte ponovno ili kontaktirajte podršku.`);
     } finally {
       setIsSending(false);
     }
@@ -403,6 +424,16 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
       <h3 className="text-2xl font-semibold text-gray-900 text-center">Pošaljite razglednicu</h3>
       
       <div className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
+        {/* Error Message */}
+        {sendError && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+            <div className="flex items-center space-x-2 text-red-800">
+              <span className="font-medium">Greška:</span>
+            </div>
+            <p className="text-red-600 text-sm mt-1">{sendError}</p>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Ime primatelja *</label>
