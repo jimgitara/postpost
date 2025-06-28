@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Type, Palette, Send, Download, Calendar, FileSignature as Signature, RotateCcw, Save, AlertCircle, CheckCircle, Clock, Zap } from 'lucide-react';
+import { ArrowLeft, Type, Palette, Send, Download, Calendar, FileSignature as Signature, RotateCcw, Save, AlertCircle, CheckCircle, Clock, Zap, ShoppingCart, Euro } from 'lucide-react';
 import { PostcardTemplate, PostcardCustomization } from '../types';
 import { sendPostcard, generatePostcardCanvasDirectly } from '../services/emailService';
+import { cartService } from '../services/cartService';
 
 interface PostcardEditorProps {
   template: PostcardTemplate;
@@ -19,6 +20,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
   const [sendError, setSendError] = useState<string | null>(null);
   const [sendSuccess, setSendSuccess] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [addedToCart, setAddedToCart] = useState(false);
   const [customization, setCustomization] = useState<PostcardCustomization>({
     frontText: 'Pozdrav iz prekrasnog mjesta!',
     frontTextColor: '#ffffff',
@@ -57,6 +59,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
     setCustomization(prev => ({ ...prev, ...updates }));
     setSendError(null);
     setSendSuccess(false);
+    setAddedToCart(false);
     
     // Auto-save simulation
     setTimeout(() => {
@@ -93,6 +96,45 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
     
     setSendError(null);
     return true;
+  };
+
+  const handleAddToCart = async () => {
+    console.log('🛒 Adding to cart...');
+    
+    try {
+      setIsCapturing(true);
+      
+      // Generate images for cart
+      const { frontImage, backImage } = await generatePostcardCanvasDirectly({
+        backgroundImageUrl: template.image,
+        frontText: customization.frontText,
+        textColor: customization.frontTextColor,
+        fontSize: customization.frontTextSize,
+        fontFamily: customization.frontTextFont,
+        message: customization.message || 'Vaša poruka ovdje...',
+        signature: customization.signature,
+        recipientName: customization.recipientName || 'Ime primatelja',
+        recipientEmail: customization.recipientEmail || 'email@primjer.com',
+        senderName: customization.senderName || 'Vaše ime'
+      });
+      
+      // Add to cart
+      cartService.addToCart(template, customization, frontImage, backImage);
+      
+      setAddedToCart(true);
+      
+      // Show success message for 2 seconds
+      setTimeout(() => {
+        setAddedToCart(false);
+      }, 2000);
+      
+      console.log('✅ Added to cart successfully');
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      setSendError('Greška pri dodavanju u košaricu. Molimo pokušajte ponovno.');
+    } finally {
+      setIsCapturing(false);
+    }
   };
 
   const handleDownload = async () => {
@@ -319,7 +361,13 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
 
       {/* Customization Controls Sidebar */}
       <div className="space-y-6 bg-white rounded-2xl shadow-lg p-6">
-        <h3 className="text-xl font-semibold text-gray-900">Personaliziraj tekst</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-semibold text-gray-900">Personaliziraj tekst</h3>
+          <div className="flex items-center space-x-1 text-green-600 font-semibold">
+            <Euro className="h-4 w-4" />
+            <span>{template.price} kn</span>
+          </div>
+        </div>
         
         {/* Text Input */}
         <div>
@@ -404,6 +452,28 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
 
         {/* Action Buttons */}
         <div className="flex flex-col space-y-3 pt-4">
+          <button
+            onClick={handleAddToCart}
+            disabled={isCapturing}
+            className="flex items-center justify-center space-x-2 bg-green-500 text-white py-3 rounded-xl font-semibold hover:bg-green-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isCapturing ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Dodaje se...</span>
+              </>
+            ) : addedToCart ? (
+              <>
+                <CheckCircle className="h-4 w-4" />
+                <span>Dodano u košaricu!</span>
+              </>
+            ) : (
+              <>
+                <ShoppingCart className="h-4 w-4" />
+                <span>Dodaj u košaricu ({template.price} kn)</span>
+              </>
+            )}
+          </button>
           <button
             onClick={handleDownload}
             disabled={isCapturing}
@@ -658,8 +728,9 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
             ))}
           </div>
 
-          <div className="text-sm text-gray-500">
-            ⚡ Canvas API - Instant
+          <div className="text-sm text-gray-500 flex items-center space-x-2">
+            <Euro className="h-4 w-4 text-green-500" />
+            <span>{template.price} kn</span>
           </div>
         </div>
 

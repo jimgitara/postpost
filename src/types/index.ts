@@ -4,6 +4,7 @@ export interface PostcardTemplate {
   image: string;
   category: string;
   description: string;
+  price?: number; // Dodana cijena
 }
 
 export interface PostcardCustomization {
@@ -24,4 +25,35 @@ export interface EmailData {
   subject: string;
   template: PostcardTemplate;
   customization: PostcardCustomization;
+}
+
+// Novi tipovi za e-commerce
+export interface CartItem {
+  id: string;
+  template: PostcardTemplate;
+  customization: PostcardCustomization;
+  quantity: number;
+  price: number;
+  frontImageData?: string;
+  backImageData?: string;
+}
+
+export interface Order {
+  id: string;
+  items: CartItem[];
+  total: number;
+  customerInfo: {
+    name: string;
+    email: string;
+    phone?: string;
+  };
+  status: 'pending' | 'processing' | 'completed' | 'cancelled';
+  createdAt: string;
+}
+
+export interface ShippingInfo {
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, Heart, Eye, Zap, Sparkles } from 'lucide-react';
+import { Search, Filter, Heart, Eye, Zap, Sparkles, ShoppingCart, Euro } from 'lucide-react';
 import { PostcardTemplate } from '../types';
 
 interface GalleryProps {
@@ -16,56 +16,64 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
       name: 'Tropska Plaža',
       image: 'https://images.pexels.com/photos/457882/pexels-photo-457882.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'priroda',
-      description: 'Prekrasna tropska plaža s kristalno čistim morem'
+      description: 'Prekrasna tropska plaža s kristalno čistim morem',
+      price: 15
     },
     {
       id: '2',
       name: 'Planinski Vrh',
       image: 'https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'priroda',
-      description: 'Spektakularan pogled s planinskog vrha'
+      description: 'Spektakularan pogled s planinskog vrha',
+      price: 18
     },
     {
       id: '3',
       name: 'Gradska Panorama',
       image: 'https://images.pexels.com/photos/378570/pexels-photo-378570.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'grad',
-      description: 'Moderna gradska panorama u sumrak'
+      description: 'Moderna gradska panorama u sumrak',
+      price: 20
     },
     {
       id: '4',
       name: 'Romantični Zalazak',
       image: 'https://images.pexels.com/photos/206359/pexels-photo-206359.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'romantika',
-      description: 'Čaroban zalazak sunca nad morem'
+      description: 'Čaroban zalazak sunca nad morem',
+      price: 22
     },
     {
       id: '5',
       name: 'Jesenska Šuma',
       image: 'https://images.pexels.com/photos/33109/fall-autumn-red-season.jpg?auto=compress&cs=tinysrgb&w=800',
       category: 'priroda',
-      description: 'Šarena jesenska šuma u punoj slavi'
+      description: 'Šarena jesenska šuma u punoj slavi',
+      price: 16
     },
     {
       id: '6',
       name: 'Mirno Jezero',
       image: 'https://images.pexels.com/photos/1032650/pexels-photo-1032650.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'priroda',
-      description: 'Spokojno jezero okruženo planinama'
+      description: 'Spokojno jezero okruženo planinama',
+      price: 17
     },
     {
       id: '7',
       name: 'Urbani Stil',
       image: 'https://images.pexels.com/photos/936722/pexels-photo-936722.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'grad',
-      description: 'Moderni urbani dizajn i arhitektura'
+      description: 'Moderni urbani dizajn i arhitektura',
+      price: 19
     },
     {
       id: '8',
       name: 'Cvijetni Vrt',
       image: 'https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'priroda',
-      description: 'Prekrasan cvijetni vrt u proljeće'
+      description: 'Prekrasan cvijetni vrt u proljeće',
+      price: 14
     }
   ];
 
@@ -109,7 +117,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
             <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"> predložak</span>
           </h2>
           <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-            Pregledajte našu kolekciju prekrasnih predložaka razglednica
+            Pregledajte našu kolekciju prekrasnih predložaka razglednica s cijenama
           </p>
         </div>
 
@@ -159,6 +167,14 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 
+                {/* Price Badge */}
+                <div className="absolute top-4 right-4">
+                  <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center space-x-1 shadow-lg">
+                    <Euro className="h-3 w-3" />
+                    <span>{template.price} kn</span>
+                  </div>
+                </div>
+                
                 {/* Overlay Actions */}
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                   <div className="flex space-x-3">
@@ -186,7 +202,12 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
 
               {/* Content */}
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-white mb-2">{template.name}</h3>
+                <div className="flex items-start justify-between mb-2">
+                  <h3 className="text-lg font-semibold text-white">{template.name}</h3>
+                  <div className="text-right">
+                    <div className="text-xl font-bold text-green-400">{template.price} kn</div>
+                  </div>
+                </div>
                 <p className="text-gray-400 text-sm mb-4">{template.description}</p>
                 <button
                   onClick={(e) => {
@@ -197,8 +218,8 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
                 >
                   <div className="absolute inset-0 bg-white/10 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                   <span className="relative z-10 flex items-center justify-center space-x-2">
-                    <Sparkles className="h-4 w-4" />
-                    <span>Odaberi predložak</span>
+                    <ShoppingCart className="h-4 w-4" />
+                    <span>Personaliziraj i kupi</span>
                   </span>
                 </button>
               </div>

@@ -1,4 +1,5 @@
 import emailjs from '@emailjs/browser';
+import { Order } from '../types';
 
 // EmailJS Configuration
 const EMAILJS_CONFIG = {
@@ -147,7 +148,7 @@ const generateFrontCanvasDirect = async (data: PostcardCanvasData): Promise<stri
       ctx.textAlign = 'right';
       ctx.fillText('RetroPost', 580, 380);
       
-      resolve(canvas.toDataURL('image/jpeg', 0.8));
+      resolve(canvas.toDataURL('image/jpeg', 0.6));
     };
     
     img.onerror = () => {
@@ -192,7 +193,7 @@ const generateFrontCanvasDirect = async (data: PostcardCanvasData): Promise<stri
         ctx.fillText(line, 300, startY + index * lineHeight);
       });
       
-      resolve(canvas.toDataURL('image/jpeg', 0.8));
+      resolve(canvas.toDataURL('image/jpeg', 0.6));
     };
     
     img.src = data.backgroundImageUrl;
@@ -294,7 +295,7 @@ const generateBackCanvasDirect = (data: PostcardCanvasData): string => {
   ctx.textAlign = 'center';
   ctx.fillText('RetroPost.com - Digitalne razglednice', 300, 390);
   
-  return canvas.toDataURL('image/jpeg', 0.8);
+  return canvas.toDataURL('image/jpeg', 0.6);
 };
 
 // Fallback canvas generator
@@ -318,7 +319,7 @@ const generateFallbackCanvas = (text: string, color1: string, color2: string): s
   ctx.shadowBlur = 4;
   ctx.fillText(text, 300, 200);
   
-  return canvas.toDataURL('image/jpeg', 0.8);
+  return canvas.toDataURL('image/jpeg', 0.6);
 };
 
 // Legacy function for backward compatibility
@@ -580,6 +581,152 @@ export const sendPostcard = async (postcardData: PostcardEmailData): Promise<voi
   } catch (fallbackError) {
     console.error('❌ FormSubmit failed:', fallbackError);
     throw new Error('Razglednica nije mogla biti poslana. Molimo pokušajte ponovno ili kontaktirajte podršku.');
+  }
+};
+
+// Nova funkcija za slanje potvrde narudžbe
+export const sendOrderConfirmation = async (order: Order): Promise<void> => {
+  console.log('📧 Sending order confirmation email...');
+  
+  // Kreiraj HTML sadržaj za potvrdu narudžbe
+  const orderItemsHtml = order.items.map(item => `
+    <tr style="border-bottom: 1px solid #eee;">
+      <td style="padding: 15px; text-align: left;">
+        <div style="display: flex; align-items: center;">
+          <img src="${item.template.image}" alt="${item.template.name}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-right: 15px;">
+          <div>
+            <strong>${item.template.name}</strong><br>
+            <small style="color: #666;">"${item.customization.frontText}"</small><br>
+            <small style="color: #666;">Za: ${item.customization.recipientName || 'Nepoznato'}</small>
+          </div>
+        </div>
+      </td>
+      <td style="padding: 15px; text-align: center;">${item.quantity}</td>
+      <td style="padding: 15px; text-align: right; font-weight: bold;">${item.price} kn</td>
+      <td style="padding: 15px; text-align: right; font-weight: bold;">${item.price * item.quantity} kn</td>
+    </tr>
+  `).join('');
+
+  const htmlContent = `
+    <div style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; text-align: center; border-radius: 15px 15px 0 0;">
+        <h1 style="margin: 0; font-size: 32px;">🎉 Potvrda narudžbe</h1>
+        <p style="margin: 15px 0 0 0; font-size: 18px; opacity: 0.9;">RetroPost - Digitalne razglednice</p>
+      </div>
+      
+      <div style="background: white; padding: 40px; border: 1px solid #ddd;">
+        <h2 style="color: #667eea; margin-top: 0;">Pozdrav ${order.customerInfo.name}! 👋</h2>
+        
+        <p style="font-size: 16px; color: #555; margin: 20px 0;">
+          Hvala vam na narudžbi! Vaša narudžba je uspješno zaprimljena i bit će obrađena u najkraćem mogućem roku.
+        </p>
+        
+        <div style="background: #f8f9fa; padding: 25px; border-radius: 10px; margin: 30px 0;">
+          <h3 style="color: #333; margin-top: 0;">📋 Detalji narudžbe</h3>
+          <p><strong>Broj narudžbe:</strong> ${order.id}</p>
+          <p><strong>Datum:</strong> ${new Date(order.createdAt).toLocaleDateString('hr-HR')}</p>
+          <p><strong>Status:</strong> <span style="color: #28a745; font-weight: bold;">Zaprimljena</span></p>
+        </div>
+        
+        <div style="margin: 30px 0;">
+          <h3 style="color: #333;">🛍️ Naručene stavke</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+            <thead>
+              <tr style="background: #f8f9fa;">
+                <th style="padding: 15px; text-align: left; border-bottom: 2px solid #ddd;">Proizvod</th>
+                <th style="padding: 15px; text-align: center; border-bottom: 2px solid #ddd;">Količina</th>
+                <th style="padding: 15px; text-align: right; border-bottom: 2px solid #ddd;">Cijena</th>
+                <th style="padding: 15px; text-align: right; border-bottom: 2px solid #ddd;">Ukupno</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${orderItemsHtml}
+            </tbody>
+            <tfoot>
+              <tr style="background: #f8f9fa;">
+                <td colspan="3" style="padding: 20px; text-align: right; font-size: 18px; font-weight: bold;">UKUPNO:</td>
+                <td style="padding: 20px; text-align: right; font-size: 20px; font-weight: bold; color: #667eea;">${order.total} kn</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        
+        <div style="background: #e3f2fd; padding: 25px; border-radius: 10px; margin: 30px 0;">
+          <h3 style="color: #1976d2; margin-top: 0;">📧 Što slijedi?</h3>
+          <ul style="color: #555; line-height: 1.8;">
+            <li>Vaše razglednice će biti generirane i poslane na navedene email adrese</li>
+            <li>Svaki primatelj će dobiti prekrasno formatiran email s razglednicom</li>
+            <li>Proces obrade traje obično 1-2 sata</li>
+            <li>Dobit ćete potvrdu kada su sve razglednice uspješno poslane</li>
+          </ul>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 25px; border-radius: 10px; margin: 30px 0;">
+          <h3 style="color: #333; margin-top: 0;">👤 Podaci za kontakt</h3>
+          <p><strong>Ime:</strong> ${order.customerInfo.name}</p>
+          <p><strong>Email:</strong> ${order.customerInfo.email}</p>
+          ${order.customerInfo.phone ? `<p><strong>Telefon:</strong> ${order.customerInfo.phone}</p>` : ''}
+        </div>
+        
+        <div style="text-align: center; margin: 40px 0;">
+          <p style="color: #667eea; font-size: 18px; font-weight: 500;">
+            Hvala vam što ste odabrali RetroPost! 💌✨
+          </p>
+          <p style="color: #666; font-size: 14px;">
+            Za sva pitanja kontaktirajte nas na <a href="mailto:jimgitara@gmail.com" style="color: #667eea;">jimgitara@gmail.com</a>
+          </p>
+        </div>
+      </div>
+      
+      <div style="background: #f8f9fa; padding: 25px; text-align: center; color: #666; font-size: 12px; border-radius: 0 0 15px 15px;">
+        <p style="margin: 0;"><strong>🚀 RetroPost - Digitalne razglednice</strong></p>
+        <p style="margin: 5px 0 0 0;"><a href="https://postretro.netlify.app" style="color: #667eea; text-decoration: none;">🌐 Posjetite RetroPost</a></p>
+      </div>
+    </div>
+  `;
+
+  try {
+    // Pošalji potvrdu narudžbe korisniku
+    const orderPayload = {
+      _subject: `🎉 Potvrda narudžbe ${order.id} - RetroPost`,
+      _template: 'box',
+      _captcha: 'false',
+      _next: window.location.origin,
+      _cc: order.customerInfo.email, // Pošalji kopiju korisniku
+      _html: htmlContent,
+      order_id: order.id,
+      customer_name: order.customerInfo.name,
+      customer_email: order.customerInfo.email,
+      total_amount: order.total,
+      items_count: order.items.length,
+      order_date: new Date(order.createdAt).toISOString(),
+      order_type: 'Digital Postcards Order',
+      sent_via: 'RetroPost Order System'
+    };
+
+    const response = await fetch('https://formsubmit.co/ajax/jimgitara@gmail.com', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(orderPayload)
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      if (result.success) {
+        console.log('✅ Order confirmation email sent successfully');
+        return;
+      } else {
+        throw new Error(`Order confirmation failed: ${result.message || 'Unknown error'}`);
+      }
+    } else {
+      throw new Error(`Order confirmation HTTP error: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('❌ Failed to send order confirmation:', error);
+    throw new Error('Potvrda narudžbe nije mogla biti poslana');
   }
 };
 
