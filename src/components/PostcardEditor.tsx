@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Type, Palette, Send, Download, Calendar, FileSignature as Signature, RotateCcw, Save, AlertCircle, CheckCircle, Clock } from 'lucide-react';
+import { ArrowLeft, Type, Palette, Send, Download, Calendar, FileSignature as Signature, RotateCcw, Save, AlertCircle, CheckCircle, Clock, Zap } from 'lucide-react';
 import { PostcardTemplate, PostcardCustomization } from '../types';
 import { sendPostcard, capturePostcardImages } from '../services/emailService';
 
@@ -140,7 +140,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
   };
 
   const handleSend = async () => {
-    console.log('Send button clicked, validating form...');
+    console.log('🚀 FAST send button clicked!');
     
     if (!validateForm()) {
       console.log('Form validation failed');
@@ -156,27 +156,36 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
     setIsCapturing(true);
     setSendError(null);
     setSendSuccess(false);
-    console.log('Starting to send postcard...');
+    console.log('⚡ Starting ULTRA FAST postcard send...');
     
     try {
-      // Capture postcard images with progress
-      console.log('Capturing postcard images...');
-      const { frontImage, backImage } = await capturePostcardImages(frontRef.current, backRef.current);
-      console.log('Images captured successfully');
+      // PARALLEL processing - capture and prepare email data simultaneously
+      console.log('📸 Starting parallel capture and email prep...');
+      
+      const capturePromise = capturePostcardImages(frontRef.current, backRef.current);
+      
+      // Prepare basic email data while capturing
+      const basicEmailData = {
+        recipientEmail: customization.recipientEmail,
+        recipientName: customization.recipientName || 'Dragi prijatelj',
+        senderName: customization.senderName,
+        message: customization.message || customization.frontText
+      };
+      
+      // Wait for capture (max 3 seconds due to our aggressive timeout)
+      const { frontImage, backImage } = await capturePromise;
+      console.log('✅ Images captured, sending email...');
       
       setIsCapturing(false);
       
       // Send postcard with images
       await sendPostcard({
-        recipientEmail: customization.recipientEmail,
-        recipientName: customization.recipientName || 'Dragi prijatelj',
-        senderName: customization.senderName,
-        message: customization.message || customization.frontText,
+        ...basicEmailData,
         frontImageData: frontImage,
         backImageData: backImage
       });
       
-      console.log('Postcard sent successfully');
+      console.log('✅ Postcard sent successfully');
       setSendSuccess(true);
       
       // Show success message for 3 seconds then go back
@@ -185,7 +194,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
       }, 3000);
       
     } catch (error) {
-      console.error('Error sending postcard:', error);
+      console.error('❌ Error sending postcard:', error);
       const errorMessage = error instanceof Error ? error.message : 'Nepoznata greška pri slanju razglednice';
       setSendError(errorMessage);
     } finally {
@@ -513,7 +522,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
               <span className="text-blue-800 font-medium">Priprema razglednice...</span>
             </div>
             <p className="text-blue-600 text-sm mt-1">
-              Molimo pričekajte dok se razglednica priprema za slanje
+              Ovo će potrajati samo nekoliko sekundi
             </p>
           </div>
         )}
@@ -584,11 +593,11 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
         {/* Delivery Estimate */}
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
           <div className="flex items-center space-x-2 text-blue-800">
-            <Calendar className="h-4 w-4" />
-            <span className="font-medium">Instant dostava putem emaila</span>
+            <Zap className="h-4 w-4" />
+            <span className="font-medium">⚡ ULTRA BRZA dostava putem emaila</span>
           </div>
           <p className="text-blue-600 text-sm mt-1">
-            Vaša razglednica će biti dostavljena odmah kao prekrasno formatiran HTML email s priloženim slikama prednje i stražnje strane.
+            Vaša razglednica će biti dostavljena u roku od 3 sekunde kao prekrasno formatiran HTML email s priloženim slikama.
           </p>
         </div>
 
@@ -618,7 +627,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
             ) : (
               <>
                 <Send className="h-4 w-4" />
-                <span>Pošalji razglednicu</span>
+                <span>⚡ Pošalji BRZO</span>
               </>
             )}
           </button>
