@@ -15,10 +15,10 @@
   port = 5173
   publish = "dist"
 
-# Edge Functions
+# Edge Functions configuration
 [[edge_functions]]
   function = "send-postcard"
-  path = "/.netlify/functions/send-postcard"
+  path = "/send-postcard"
 
 # Security headers
 [[headers]]
@@ -41,6 +41,14 @@
   for = "/"
   [headers.values]
     X-Frame-Options = "SAMEORIGIN"
+
+# Edge Function headers
+[[headers]]
+  for = "/send-postcard"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "POST, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
 
 # Enable form processing
 [build.processing]

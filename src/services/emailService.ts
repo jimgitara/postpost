@@ -42,17 +42,6 @@ const encode = (data: Record<string, string>) => {
     .join("&");
 };
 
-// Convert base64 to blob for file attachments
-const base64ToBlob = (base64: string, mimeType: string): Blob => {
-  const byteCharacters = atob(base64.split(',')[1]);
-  const byteNumbers = new Array(byteCharacters.length);
-  for (let i = 0; i < byteCharacters.length; i++) {
-    byteNumbers[i] = byteCharacters.charCodeAt(i);
-  }
-  const byteArray = new Uint8Array(byteNumbers);
-  return new Blob([byteArray], { type: mimeType });
-};
-
 // INSTANT Canvas generation - NO DOM dependency
 export const generatePostcardCanvasDirectly = async (data: PostcardCanvasData): Promise<{ frontImage: string; backImage: string }> => {
   console.log('🎨 DIRECT Canvas generation starting...');
@@ -158,7 +147,7 @@ const generateFrontCanvasDirect = async (data: PostcardCanvasData): Promise<stri
       ctx.textAlign = 'right';
       ctx.fillText('RetroPost', 580, 380);
       
-      resolve(canvas.toDataURL('image/jpeg', 0.7));
+      resolve(canvas.toDataURL('image/jpeg', 0.8));
     };
     
     img.onerror = () => {
@@ -203,7 +192,7 @@ const generateFrontCanvasDirect = async (data: PostcardCanvasData): Promise<stri
         ctx.fillText(line, 300, startY + index * lineHeight);
       });
       
-      resolve(canvas.toDataURL('image/jpeg', 0.7));
+      resolve(canvas.toDataURL('image/jpeg', 0.8));
     };
     
     img.src = data.backgroundImageUrl;
@@ -305,7 +294,7 @@ const generateBackCanvasDirect = (data: PostcardCanvasData): string => {
   ctx.textAlign = 'center';
   ctx.fillText('RetroPost.com - Digitalne razglednice', 300, 390);
   
-  return canvas.toDataURL('image/jpeg', 0.7);
+  return canvas.toDataURL('image/jpeg', 0.8);
 };
 
 // Fallback canvas generator
@@ -329,7 +318,7 @@ const generateFallbackCanvas = (text: string, color1: string, color2: string): s
   ctx.shadowBlur = 4;
   ctx.fillText(text, 300, 200);
   
-  return canvas.toDataURL('image/jpeg', 0.7);
+  return canvas.toDataURL('image/jpeg', 0.8);
 };
 
 // Legacy function for backward compatibility
@@ -411,7 +400,7 @@ export const sendEmail = async (formData: EmailData): Promise<void> => {
 };
 
 export const sendPostcard = async (postcardData: PostcardEmailData): Promise<void> => {
-  console.log('📧 Starting postcard send with MULTIPART FORM...');
+  console.log('🚀 Starting postcard send with Netlify Edge Function...');
   
   // Validate required fields
   if (!postcardData.recipientEmail || !postcardData.senderName) {
@@ -430,80 +419,80 @@ export const sendPostcard = async (postcardData: PostcardEmailData): Promise<voi
   }
   
   try {
-    console.log('📧 Using FormSubmit with MULTIPART FORM and file attachments');
+    console.log('📧 Using Netlify Edge Function for postcard sending...');
     
-    // Create FormData for multipart form submission
-    const formData = new FormData();
+    // Check if we're on Netlify production
+    const isNetlifyProduction = window.location.hostname.includes('netlify.app') || 
+                               window.location.hostname.includes('netlify.com') ||
+                               window.location.hostname === 'postretro.netlify.app';
     
-    // Add form fields
-    formData.append('_subject', `🌟 Nova razglednica od ${postcardData.senderName}`);
-    formData.append('_template', 'table');
-    formData.append('_captcha', 'false');
-    formData.append('_next', window.location.origin);
-    formData.append('_cc', postcardData.recipientEmail);
-    formData.append('sender_name', postcardData.senderName);
-    formData.append('recipient_name', postcardData.recipientName || 'Dragi prijatelj');
-    formData.append('recipient_email', postcardData.recipientEmail);
-    formData.append('message', postcardData.message || 'Pozdrav iz prekrasnog mjesta!');
-    formData.append('postcard_type', 'Digital Postcard with Attachments');
+    const edgeFunctionUrl = isNetlifyProduction 
+      ? '/.netlify/edge-functions/send-postcard'
+      : '/send-postcard'; // For local development
     
-    // Convert base64 images to blobs and add as file attachments
-    const frontBlob = base64ToBlob(postcardData.frontImageData, 'image/jpeg');
-    const backBlob = base64ToBlob(postcardData.backImageData, 'image/jpeg');
-    
-    formData.append('front_postcard', frontBlob, 'razglednica-prednja.jpg');
-    formData.append('back_postcard', backBlob, 'razglednica-straznja.jpg');
-    
-    // Add HTML message
-    const htmlMessage = `
-      <h2>🌟 Nova digitalna razglednica!</h2>
-      <p><strong>Od:</strong> ${postcardData.senderName}</p>
-      <p><strong>Za:</strong> ${postcardData.recipientName || 'Dragi prijatelj'}</p>
-      <p><strong>Poruka:</strong></p>
-      <blockquote style="font-style: italic; border-left: 3px solid #667eea; padding-left: 15px; margin: 15px 0;">
-        "${postcardData.message}"
-      </blockquote>
-      <p><em>Razglednica je priložena kao dvije slike (prednja i stražnja strana).</em></p>
-      <hr>
-      <p style="color: #666; font-size: 12px;">Poslano putem RetroPost - https://postretro.netlify.app</p>
-    `;
-    formData.append('_html', htmlMessage);
-    
-    console.log('📧 Sending multipart form with file attachments...');
-    
-    const formSubmitResponse = await fetch('https://formsubmit.co/jimgitara@gmail.com', {
+    const edgeResponse = await fetch(edgeFunctionUrl, {
       method: 'POST',
-      body: formData // Don't set Content-Type header - let browser set it with boundary
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        recipientEmail: postcardData.recipientEmail,
+        recipientName: postcardData.recipientName || 'Dragi prijatelj',
+        senderName: postcardData.senderName,
+        message: postcardData.message || 'Pozdrav iz prekrasnog mjesta!',
+        frontImageData: postcardData.frontImageData,
+        backImageData: postcardData.backImageData
+      })
     });
 
-    if (formSubmitResponse.ok) {
-      console.log('✅ FormSubmit with file attachments successful');
+    if (edgeResponse.ok) {
+      const result = await edgeResponse.json();
+      console.log('✅ Edge Function success:', result);
       return;
     } else {
-      const errorText = await formSubmitResponse.text();
-      console.error('❌ FormSubmit error:', errorText);
-      throw new Error('FormSubmit service failed');
+      const errorData = await edgeResponse.json();
+      console.error('❌ Edge Function error:', errorData);
+      throw new Error(errorData.details || 'Edge Function failed');
     }
     
   } catch (error) {
-    console.error('❌ Postcard sending failed:', error);
+    console.error('❌ Edge Function failed, trying FormSubmit backup:', error);
     
-    // Fallback: Try simple text email
+    // Fallback to direct FormSubmit
     try {
-      console.log('📧 Fallback: Sending simple notification email...');
+      console.log('📧 Fallback: Using FormSubmit directly...');
+      
+      const htmlContent = `
+        <h2>🌟 Nova digitalna razglednica!</h2>
+        <p><strong>Od:</strong> ${postcardData.senderName}</p>
+        <p><strong>Za:</strong> ${postcardData.recipientName || 'Dragi prijatelj'}</p>
+        <p><strong>Poruka:</strong></p>
+        <blockquote style="font-style: italic; border-left: 3px solid #667eea; padding-left: 15px; margin: 15px 0;">
+          "${postcardData.message}"
+        </blockquote>
+        <div style="text-align: center; margin: 20px 0;">
+          <h3>Prednja strana razglednice:</h3>
+          <img src="${postcardData.frontImageData}" style="max-width: 100%; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" alt="Prednja strana">
+          <h3>Stražnja strana razglednice:</h3>
+          <img src="${postcardData.backImageData}" style="max-width: 100%; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" alt="Stražnja strana">
+        </div>
+        <hr>
+        <p style="color: #666; font-size: 12px;">Poslano putem RetroPost - https://postretro.netlify.app</p>
+      `;
       
       const fallbackPayload = {
         _subject: `🌟 Nova razglednica od ${postcardData.senderName}`,
-        _template: 'table',
+        _template: 'box',
         _captcha: 'false',
         _next: window.location.origin,
         _cc: postcardData.recipientEmail,
+        _html: htmlContent,
         sender_name: postcardData.senderName,
         recipient_name: postcardData.recipientName || 'Dragi prijatelj',
         recipient_email: postcardData.recipientEmail,
         message: postcardData.message,
-        notification: `Dobili ste digitalnu razglednicu od ${postcardData.senderName}. Poruka: "${postcardData.message}". Razglednica je kreirana ali slike nisu mogle biti priložene zbog ograničenja email servisa.`,
-        postcard_type: 'Digital Postcard Notification'
+        postcard_type: 'Digital Postcard with Embedded Images (Fallback)'
       };
       
       const fallbackResponse = await fetch('https://formsubmit.co/jimgitara@gmail.com', {
@@ -516,10 +505,12 @@ export const sendPostcard = async (postcardData: PostcardEmailData): Promise<voi
       });
 
       if (fallbackResponse.ok) {
-        console.log('✅ Fallback notification email sent');
-        throw new Error('Razglednica je poslana kao tekstualna poruka. Slike nisu mogle biti priložene zbog ograničenja email servisa.');
+        console.log('✅ FormSubmit fallback successful');
+        return;
       } else {
-        throw new Error('Sve metode slanja email-a su neuspješne');
+        const errorText = await fallbackResponse.text();
+        console.error('❌ FormSubmit fallback failed:', errorText);
+        throw new Error('FormSubmit fallback failed');
       }
     } catch (fallbackError) {
       console.error('❌ All email methods failed:', fallbackError);
@@ -534,6 +525,6 @@ export const initEmailJS = () => {
     emailjs.init(EMAILJS_CONFIG.publicKey);
     console.log('EmailJS initialized');
   } else {
-    console.log('EmailJS not configured - using FormSubmit with file attachments');
+    console.log('EmailJS not configured - using Netlify Edge Function + FormSubmit');
   }
 };
