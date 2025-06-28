@@ -369,7 +369,7 @@ export const sendEmail = async (formData: EmailData): Promise<void> => {
     
   } catch (error) {
     try {
-      const formSubmitResponse = await fetch('https://formsubmit.co/jimgitara@gmail.com', {
+      const formSubmitResponse = await fetch('https://formsubmit.co/ajax/jimgitara@gmail.com', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -388,8 +388,13 @@ export const sendEmail = async (formData: EmailData): Promise<void> => {
       });
 
       if (formSubmitResponse.ok) {
-        console.log('FormSubmit contact email backup successful');
-        return;
+        const result = await formSubmitResponse.json();
+        if (result.success) {
+          console.log('FormSubmit contact email backup successful');
+          return;
+        } else {
+          throw new Error('FormSubmit returned failure status');
+        }
       } else {
         throw new Error('FormSubmit service failed');
       }
@@ -400,7 +405,7 @@ export const sendEmail = async (formData: EmailData): Promise<void> => {
 };
 
 export const sendPostcard = async (postcardData: PostcardEmailData): Promise<void> => {
-  console.log('🚀 Starting postcard send with Netlify Edge Function...');
+  console.log('🚀 Starting postcard send...');
   
   // Validate required fields
   if (!postcardData.recipientEmail || !postcardData.senderName) {
@@ -418,104 +423,163 @@ export const sendPostcard = async (postcardData: PostcardEmailData): Promise<voi
     throw new Error('Nedostaju slike razglednice');
   }
   
-  try {
-    console.log('📧 Using Netlify Edge Function for postcard sending...');
-    
-    // Check if we're on Netlify production
-    const isNetlifyProduction = window.location.hostname.includes('netlify.app') || 
-                               window.location.hostname.includes('netlify.com') ||
-                               window.location.hostname === 'postretro.netlify.app';
-    
-    const edgeFunctionUrl = isNetlifyProduction 
-      ? '/.netlify/edge-functions/send-postcard'
-      : '/send-postcard'; // For local development
-    
-    const edgeResponse = await fetch(edgeFunctionUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        recipientEmail: postcardData.recipientEmail,
-        recipientName: postcardData.recipientName || 'Dragi prijatelj',
-        senderName: postcardData.senderName,
-        message: postcardData.message || 'Pozdrav iz prekrasnog mjesta!',
-        frontImageData: postcardData.frontImageData,
-        backImageData: postcardData.backImageData
-      })
-    });
-
-    if (edgeResponse.ok) {
-      const result = await edgeResponse.json();
-      console.log('✅ Edge Function success:', result);
-      return;
-    } else {
-      const errorData = await edgeResponse.json();
-      console.error('❌ Edge Function error:', errorData);
-      throw new Error(errorData.details || 'Edge Function failed');
-    }
-    
-  } catch (error) {
-    console.error('❌ Edge Function failed, trying FormSubmit backup:', error);
-    
-    // Fallback to direct FormSubmit
+  // Check if we're on Netlify production
+  const isNetlifyProduction = window.location.hostname.includes('netlify.app') || 
+                             window.location.hostname.includes('netlify.com') ||
+                             window.location.hostname === 'postretro.netlify.app';
+  
+  // Try Edge Function first (only in production)
+  if (isNetlifyProduction) {
     try {
-      console.log('📧 Fallback: Using FormSubmit directly...');
+      console.log('📧 Using Netlify Edge Function for postcard sending...');
       
-      const htmlContent = `
-        <h2>🌟 Nova digitalna razglednica!</h2>
-        <p><strong>Od:</strong> ${postcardData.senderName}</p>
-        <p><strong>Za:</strong> ${postcardData.recipientName || 'Dragi prijatelj'}</p>
-        <p><strong>Poruka:</strong></p>
-        <blockquote style="font-style: italic; border-left: 3px solid #667eea; padding-left: 15px; margin: 15px 0;">
-          "${postcardData.message}"
-        </blockquote>
-        <div style="text-align: center; margin: 20px 0;">
-          <h3>Prednja strana razglednice:</h3>
-          <img src="${postcardData.frontImageData}" style="max-width: 100%; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" alt="Prednja strana">
-          <h3>Stražnja strana razglednice:</h3>
-          <img src="${postcardData.backImageData}" style="max-width: 100%; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);" alt="Stražnja strana">
-        </div>
-        <hr>
-        <p style="color: #666; font-size: 12px;">Poslano putem RetroPost - https://postretro.netlify.app</p>
-      `;
+      const edgeFunctionUrl = '/.netlify/edge-functions/send-postcard';
       
-      const fallbackPayload = {
-        _subject: `🌟 Nova razglednica od ${postcardData.senderName}`,
-        _template: 'box',
-        _captcha: 'false',
-        _next: window.location.origin,
-        _cc: postcardData.recipientEmail,
-        _html: htmlContent,
-        sender_name: postcardData.senderName,
-        recipient_name: postcardData.recipientName || 'Dragi prijatelj',
-        recipient_email: postcardData.recipientEmail,
-        message: postcardData.message,
-        postcard_type: 'Digital Postcard with Embedded Images (Fallback)'
-      };
-      
-      const fallbackResponse = await fetch('https://formsubmit.co/jimgitara@gmail.com', {
+      const edgeResponse = await fetch(edgeFunctionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify(fallbackPayload)
+        body: JSON.stringify({
+          recipientEmail: postcardData.recipientEmail,
+          recipientName: postcardData.recipientName || 'Dragi prijatelj',
+          senderName: postcardData.senderName,
+          message: postcardData.message || 'Pozdrav iz prekrasnog mjesta!',
+          frontImageData: postcardData.frontImageData,
+          backImageData: postcardData.backImageData
+        })
       });
 
-      if (fallbackResponse.ok) {
-        console.log('✅ FormSubmit fallback successful');
+      // Check if response is JSON before parsing
+      const contentType = edgeResponse.headers.get('content-type');
+      const isJsonResponse = contentType && contentType.includes('application/json');
+
+      if (edgeResponse.ok && isJsonResponse) {
+        const result = await edgeResponse.json();
+        if (result.success) {
+          console.log('✅ Edge Function success:', result);
+          return;
+        } else {
+          throw new Error(`Edge Function returned failure: ${result.error || 'Unknown error'}`);
+        }
+      } else {
+        const responseText = await edgeResponse.text();
+        console.error('❌ Edge Function error:', {
+          status: edgeResponse.status,
+          statusText: edgeResponse.statusText,
+          contentType,
+          response: responseText
+        });
+        throw new Error(`Edge Function failed: ${edgeResponse.status} - ${responseText}`);
+      }
+      
+    } catch (error) {
+      console.error('❌ Edge Function failed:', error);
+      // Fall through to FormSubmit backup
+    }
+  }
+  
+  // Use FormSubmit as fallback (for local development or if Edge Function fails)
+  try {
+    console.log('📧 Using FormSubmit for postcard sending...');
+    
+    // Create simplified HTML content without embedded images to avoid payload size limits
+    const htmlContent = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="margin: 0; font-size: 28px;">🌟 Digitalna Razglednica</h1>
+          <p style="margin: 10px 0 0 0; opacity: 0.9;">Poslano s ljubavlju putem RetroPost</p>
+        </div>
+        
+        <div style="background: white; padding: 30px; border: 1px solid #ddd; border-radius: 0 0 10px 10px;">
+          <h2 style="color: #667eea; margin-top: 0;">Pozdrav ${postcardData.recipientName || 'dragi prijatelj'}! 👋</h2>
+          
+          <p style="font-size: 16px; color: #555; margin: 20px 0;">
+            Dobili ste prekrasnu digitalnu razglednicu od <strong>${postcardData.senderName}</strong>
+          </p>
+          
+          <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; border-left: 4px solid #667eea; margin: 20px 0;">
+            <h3 style="color: #667eea; margin-top: 0;">💌 Osobna poruka</h3>
+            <p style="font-style: italic; font-size: 16px; line-height: 1.6; color: #333; margin: 10px 0;">
+              "${postcardData.message || 'Pozdrav iz prekrasnog mjesta!'}"
+            </p>
+            <p style="text-align: right; font-weight: bold; color: #667eea; margin: 15px 0 0 0;">
+              — ${postcardData.senderName}
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0; padding: 20px; background: #f0f8ff; border-radius: 10px;">
+            <p style="color: #666; margin: 0; font-size: 14px;">
+              📸 Razglednica sadrži prekrasne slike koje su generirane posebno za vas!<br>
+              🎨 Slike su kreirane pomoću napredne Canvas tehnologije
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <p style="color: #667eea; font-size: 18px; font-weight: 500;">
+              Nadamo se da vam se sviđa ova digitalna razglednica! 💌✨
+            </p>
+          </div>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 12px; border-radius: 0 0 10px 10px;">
+          <p style="margin: 0;"><strong>🚀 Poslano putem RetroPost - Digitalne razglednice</strong></p>
+          <p style="margin: 5px 0 0 0;"><a href="https://postretro.netlify.app" style="color: #667eea; text-decoration: none;">🌐 Posjetite RetroPost</a></p>
+        </div>
+      </div>
+    `;
+    
+    const fallbackPayload = {
+      _subject: `🌟 Nova razglednica od ${postcardData.senderName}`,
+      _template: 'box',
+      _captcha: 'false',
+      _next: window.location.origin,
+      _cc: postcardData.recipientEmail,
+      _html: htmlContent,
+      sender_name: postcardData.senderName,
+      recipient_name: postcardData.recipientName || 'Dragi prijatelj',
+      recipient_email: postcardData.recipientEmail,
+      message: postcardData.message || 'Pozdrav iz prekrasnog mjesta!',
+      postcard_type: 'Digital Postcard',
+      sent_via: 'FormSubmit',
+      timestamp: new Date().toISOString()
+    };
+    
+    // Use the /ajax/ endpoint for programmatic submissions
+    const fallbackResponse = await fetch('https://formsubmit.co/ajax/jimgitara@gmail.com', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(fallbackPayload)
+    });
+
+    if (fallbackResponse.ok) {
+      const result = await fallbackResponse.json();
+      console.log('FormSubmit response:', result);
+      
+      // Check the success property in the response
+      if (result.success) {
+        console.log('✅ FormSubmit successful');
         return;
       } else {
-        const errorText = await fallbackResponse.text();
-        console.error('❌ FormSubmit fallback failed:', errorText);
-        throw new Error('FormSubmit fallback failed');
+        console.error('❌ FormSubmit returned failure:', result);
+        throw new Error(`FormSubmit failed: ${result.message || 'Unknown error'}`);
       }
-    } catch (fallbackError) {
-      console.error('❌ All email methods failed:', fallbackError);
-      throw new Error('Email servis trenutno nije dostupan. Molimo kontaktirajte podršku na jimgitara@gmail.com');
+    } else {
+      const errorText = await fallbackResponse.text();
+      console.error('❌ FormSubmit HTTP error:', {
+        status: fallbackResponse.status,
+        statusText: fallbackResponse.statusText,
+        response: errorText
+      });
+      throw new Error(`FormSubmit HTTP error: ${fallbackResponse.status} - ${errorText}`);
     }
+  } catch (fallbackError) {
+    console.error('❌ FormSubmit failed:', fallbackError);
+    throw new Error('Razglednica nije mogla biti poslana. Molimo pokušajte ponovno ili kontaktirajte podršku.');
   }
 };
 
