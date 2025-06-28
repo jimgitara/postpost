@@ -53,8 +53,36 @@ export const sendEmail = async (formData: EmailData): Promise<void> => {
 
 export const sendPostcard = async (postcardData: PostcardEmailData): Promise<void> => {
   try {
-    // Create email content for postcard
-    const emailContent = `
+    // Create a proper form submission for postcard
+    const formData = new FormData();
+    formData.append('form-name', 'postcard');
+    formData.append('recipient_name', postcardData.recipientName);
+    formData.append('recipient_email', postcardData.recipientEmail);
+    formData.append('sender_name', postcardData.senderName);
+    formData.append('message', postcardData.message);
+    
+    const response = await fetch("/", {
+      method: "POST",
+      body: formData
+    });
+
+    if (!response.ok) {
+      // Fallback to FormSubmit if Netlify fails
+      const fallbackResponse = await fetch('https://formsubmit.co/jimgitara@gmail.com', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          _subject: `Nova razglednica od ${postcardData.senderName}`,
+          _template: 'table',
+          _captcha: 'false',
+          sender_name: postcardData.senderName,
+          recipient_name: postcardData.recipientName,
+          recipient_email: postcardData.recipientEmail,
+          message: postcardData.message,
+          full_message: `
 Pozdrav ${postcardData.recipientName}!
 
 Dobili ste digitalnu razglednicu od ${postcardData.senderName}:
@@ -63,23 +91,13 @@ Dobili ste digitalnu razglednicu od ${postcardData.senderName}:
 
 ---
 Poslano putem RetroPost - Digitalne Razglednice
-    `;
+          `
+        })
+      });
 
-    const response = await fetch("/", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: encode({
-        "form-name": "postcard",
-        "recipient_name": postcardData.recipientName,
-        "recipient_email": postcardData.recipientEmail,
-        "sender_name": postcardData.senderName,
-        "message": postcardData.message,
-        "full_message": emailContent
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error('Postcard sending failed');
+      if (!fallbackResponse.ok) {
+        throw new Error('Both Netlify and FormSubmit failed');
+      }
     }
 
     return;

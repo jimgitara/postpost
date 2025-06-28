@@ -6,24 +6,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- SEO Meta Tags -->
-    <title>RetroPost - Pošaljite Futurističke Digitalne Razglednice</title>
-    <meta name="description" content="Kreirajte i pošaljite cyberpunk digitalne razglednice s futurističkim predlošcima. Besplatno kreiranje, brza dostava, moderna tehnologija." />
-    <meta name="keywords" content="digitalne razglednice, cyberpunk, futuristički dizajn, online razglednice, personalizirane razglednice" />
+    <title>RetroPost - Pošaljite Personalizirane Digitalne Razglednice</title>
+    <meta name="description" content="Kreirajte i pošaljite prekrasne digitalne razglednice s modernim predlošcima. Besplatno kreiranje, brza dostava, jednostavna upotreba." />
+    <meta name="keywords" content="digitalne razglednice, online razglednice, personalizirane razglednice, moderni dizajn, email razglednice" />
     <meta name="author" content="RetroPost" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://retropost.netlify.app/" />
-    <meta property="og:title" content="RetroPost - Pošaljite Futurističke Digitalne Razglednice" />
-    <meta property="og:description" content="Kreirajte i pošaljite cyberpunk digitalne razglednice s futurističkim predlošcima." />
-    <meta property="og:image" content="https://retropost.netlify.app/og-image.jpg" />
+    <meta property="og:url" content="https://postretro.netlify.app/" />
+    <meta property="og:title" content="RetroPost - Pošaljite Personalizirane Digitalne Razglednice" />
+    <meta property="og:description" content="Kreirajte i pošaljite prekrasne digitalne razglednice s modernim predlošcima." />
+    <meta property="og:image" content="https://postretro.netlify.app/og-image.jpg" />
     
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://retropost.netlify.app/" />
-    <meta property="twitter:title" content="RetroPost - Pošaljite Futurističke Digitalne Razglednice" />
-    <meta property="twitter:description" content="Kreirajte i pošaljite cyberpunk digitalne razglednice s futurističkim predlošcima." />
-    <meta property="twitter:image" content="https://retropost.netlify.app/og-image.jpg" />
+    <meta property="twitter:url" content="https://postretro.netlify.app/" />
+    <meta property="twitter:title" content="RetroPost - Pošaljite Personalizirane Digitalne Razglednice" />
+    <meta property="twitter:description" content="Kreirajte i pošaljite prekrasne digitalne razglednice s modernim predlošcima." />
+    <meta property="twitter:image" content="https://postretro.netlify.app/og-image.jpg" />
     
     <!-- Structured Data -->
     <script type="application/ld+json">
@@ -31,8 +31,8 @@
       "@context": "https://schema.org",
       "@type": "WebApplication",
       "name": "RetroPost",
-      "description": "Kreirajte i pošaljite cyberpunk digitalne razglednice s futurističkim predlošcima",
-      "url": "https://retropost.netlify.app/",
+      "description": "Kreirajte i pošaljite prekrasne digitalne razglednice s modernim predlošcima",
+      "url": "https://postretro.netlify.app/",
       "applicationCategory": "DesignApplication",
       "operatingSystem": "Web",
       "offers": {
@@ -58,10 +58,18 @@
     <link rel="dns-prefetch" href="https://images.pexels.com">
     
     <!-- Theme Color -->
-    <meta name="theme-color" content="#00d4ff" />
+    <meta name="theme-color" content="#3b82f6" />
     
     <!-- Accessibility -->
     <meta name="color-scheme" content="dark" />
+    
+    <!-- Hidden Netlify Forms -->
+    <form name="postcard" netlify netlify-honeypot="bot-field" hidden>
+      <input type="text" name="recipient_name" />
+      <input type="email" name="recipient_email" />
+      <input type="text" name="sender_name" />
+      <textarea name="message"></textarea>
+    </form>
   </head>
   <body>
     <div id="root"></div>
