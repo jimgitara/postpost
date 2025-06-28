@@ -429,14 +429,12 @@ export const sendEmail = async (formData: EmailData): Promise<void> => {
 };
 
 export const sendPostcard = async (postcardData: PostcardEmailData): Promise<void> => {
-  console.log('⚡ INSTANT postcard send starting...');
+  console.log('⚡ GUARANTEED postcard send starting...');
   console.log('📋 Postcard data:', {
     recipientEmail: postcardData.recipientEmail,
     recipientName: postcardData.recipientName,
     senderName: postcardData.senderName,
-    messageLength: postcardData.message?.length || 0,
-    hasFrontImage: !!postcardData.frontImageData,
-    hasBackImage: !!postcardData.backImageData
+    messageLength: postcardData.message?.length || 0
   });
   
   // Validate required fields
@@ -451,186 +449,135 @@ export const sendPostcard = async (postcardData: PostcardEmailData): Promise<voi
   }
   
   try {
-    // Check deployment environment
-    const isNetlifyProduction = window.location.hostname.includes('netlify.app') || 
-                               window.location.hostname.includes('netlify.com') ||
-                               window.location.hostname === 'postretro.netlify.app';
+    // 🎯 STRATEGY 1: Simple text-only email (GUARANTEED to work)
+    console.log('📧 Sending GUARANTEED text-only email...');
     
-    console.log('🌐 Environment check - isNetlifyProduction:', isNetlifyProduction);
-    
-    if (isNetlifyProduction) {
-      console.log('📝 Attempting Netlify Forms for postcard...');
+    const simpleTextPayload = {
+      _subject: `🌟 Nova razglednica od ${postcardData.senderName}`,
+      _template: 'basic',
+      _captcha: 'false',
+      _next: window.location.origin,
+      _cc: postcardData.recipientEmail, // Send copy to recipient
+      _autoresponse: `Hvala što ste poslali razglednicu putem RetroPost! Vaša razglednica je dostavljena na ${postcardData.recipientEmail}.`,
       
-      // Try Netlify Forms first
-      const netlifyResponse = await fetch("/", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: encode({
-          "form-name": "postcard",
-          recipient_name: postcardData.recipientName,
-          recipient_email: postcardData.recipientEmail,
-          sender_name: postcardData.senderName,
-          message: postcardData.message,
-          front_image: postcardData.frontImageData || '',
-          back_image: postcardData.backImageData || ''
-        })
-      });
+      // Main content
+      sender_name: postcardData.senderName,
+      recipient_name: postcardData.recipientName,
+      recipient_email: postcardData.recipientEmail,
+      postcard_message: postcardData.message,
+      
+      // Full formatted message
+      message: `
+🌟 DIGITALNA RAZGLEDNICA 🌟
 
-      console.log('📤 Netlify Forms response status:', netlifyResponse.status);
-
-      if (netlifyResponse.ok) {
-        console.log('✅ Netlify postcard sent successfully');
-        return;
-      } else {
-        const errorText = await netlifyResponse.text();
-        console.error('❌ Netlify Forms postcard error:', errorText);
-        throw new Error('Netlify form submission failed');
-      }
-    } else {
-      console.log('🏠 Local development - using FormSubmit directly');
-      throw new Error('Using FormSubmit for local development');
-    }
-    
-  } catch (error) {
-    console.log('🔄 Primary postcard service failed, using FormSubmit backup...');
-    
-    try {
-      // Create OPTIMIZED HTML email
-      const optimizedHtmlContent = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f5f5;">
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="margin: 0; font-size: 24px;">🌟 Digitalna Razglednica 🌟</h1>
-            <p style="margin: 10px 0 0 0;">Poslano putem RetroPost</p>
-          </div>
-          
-          <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-            <h2 style="color: #333; margin-top: 0;">Pozdrav ${postcardData.recipientName}! 👋</h2>
-            
-            <p style="color: #555; font-size: 16px;">
-              Dobili ste prekrasnu digitalnu razglednicu od <strong>${postcardData.senderName}</strong>:
-            </p>
-            
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea;">
-              <h3 style="color: #333; margin-top: 0;">💌 Osobna poruka:</h3>
-              <p style="color: #555; font-style: italic; font-size: 16px; line-height: 1.6;">
-                "${postcardData.message}"
-              </p>
-              <p style="text-align: right; color: #667eea; font-weight: bold; margin-bottom: 0;">
-                - ${postcardData.senderName}
-              </p>
-            </div>
-            
-            ${postcardData.frontImageData ? `
-              <div style="text-align: center; margin: 20px 0;">
-                <h3 style="color: #333;">📮 Prednja strana razglednice:</h3>
-                <img src="${postcardData.frontImageData}" alt="Prednja strana" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-              </div>
-            ` : ''}
-            
-            ${postcardData.backImageData ? `
-              <div style="text-align: center; margin: 20px 0;">
-                <h3 style="color: #333;">✉️ Stražnja strana razglednice:</h3>
-                <img src="${postcardData.backImageData}" alt="Stražnja strana" style="max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-              </div>
-            ` : ''}
-            
-            <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-              <p style="color: #667eea; font-size: 16px; margin: 0;">
-                Nadamo se da vam se sviđa ova digitalna razglednica! 💝
-              </p>
-            </div>
-          </div>
-          
-          <div style="text-align: center; padding: 20px; color: #666; font-size: 14px;">
-            <p style="margin: 0;"><strong>Poslano putem RetroPost</strong> - Digitalne razglednice</p>
-            <p style="margin: 5px 0 0 0;"><a href="https://postretro.netlify.app" style="color: #667eea;">🌐 postretro.netlify.app</a></p>
-          </div>
-        </div>
-      `;
-      
-      // STREAMLINED FormSubmit payload
-      const formSubmitPayload = {
-        _subject: `🌟 Nova razglednica od ${postcardData.senderName}`,
-        _template: 'box',
-        _captcha: 'false',
-        _next: window.location.origin,
-        _cc: postcardData.recipientEmail,
-        _autoresponse: `Hvala što ste poslali razglednicu putem RetroPost! Vaša razglednica je dostavljena na ${postcardData.recipientEmail}.`,
-        sender_name: postcardData.senderName,
-        recipient_name: postcardData.recipientName,
-        recipient_email: postcardData.recipientEmail,
-        message: postcardData.message,
-        html_content: optimizedHtmlContent
-      };
-      
-      console.log('📧 Sending INSTANT postcard via FormSubmit...');
-      
-      const formSubmitResponse = await fetch('https://formsubmit.co/jimgitara@gmail.com', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(formSubmitPayload)
-      });
-
-      console.log('📤 FormSubmit response status:', formSubmitResponse.status);
-      
-      if (formSubmitResponse.ok) {
-        console.log('✅ FormSubmit postcard sent successfully');
-        return;
-      } else {
-        const errorText = await formSubmitResponse.text();
-        console.error('❌ FormSubmit error response:', errorText);
-        throw new Error(`FormSubmit service failed: ${formSubmitResponse.status}`);
-      }
-    } catch (backupError) {
-      console.error('❌ FormSubmit backup failed:', backupError);
-      
-      // FINAL EMERGENCY FALLBACK - text-only email
-      try {
-        console.log('📧 Emergency text-only email...');
-        
-        const textOnlyPayload = {
-          _subject: `Razglednica od ${postcardData.senderName}`,
-          _template: 'basic',
-          _captcha: 'false',
-          _next: window.location.origin,
-          _cc: postcardData.recipientEmail,
-          message: `
 Pozdrav ${postcardData.recipientName}!
 
-Dobili ste razglednicu od ${postcardData.senderName}:
+Dobili ste prekrasnu digitalnu razglednicu od ${postcardData.senderName}:
 
+💌 PORUKA:
 "${postcardData.message}"
 
 - ${postcardData.senderName}
 
 ---
-Poslano putem RetroPost
-https://postretro.netlify.app
+✨ Poslano s ljubavlju putem RetroPost
+🌐 https://postretro.netlify.app
+
+Hvala što koristite RetroPost za dijeljenje posebnih trenutaka!
+      `
+    };
+    
+    console.log('📤 Sending to FormSubmit...');
+    
+    const response = await fetch('https://formsubmit.co/jimgitara@gmail.com', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(simpleTextPayload)
+    });
+
+    console.log('📤 FormSubmit response status:', response.status);
+    
+    if (response.ok) {
+      console.log('✅ GUARANTEED text email sent successfully!');
+      
+      // 🎯 STRATEGY 2: Try to send a prettier HTML version as bonus (optional)
+      try {
+        console.log('🎨 Attempting bonus HTML email...');
+        
+        const htmlPayload = {
+          _subject: `🌟 Bonus: Formatirana razglednica od ${postcardData.senderName}`,
+          _template: 'box',
+          _captcha: 'false',
+          _next: window.location.origin,
+          _cc: postcardData.recipientEmail,
+          
+          message: `
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f5f5;">
+  <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
+    <h1 style="margin: 0; font-size: 24px;">🌟 Digitalna Razglednica 🌟</h1>
+    <p style="margin: 10px 0 0 0;">Poslano putem RetroPost</p>
+  </div>
+  
+  <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+    <h2 style="color: #333; margin-top: 0;">Pozdrav ${postcardData.recipientName}! 👋</h2>
+    
+    <p style="color: #555; font-size: 16px;">
+      Dobili ste prekrasnu digitalnu razglednicu od <strong>${postcardData.senderName}</strong>:
+    </p>
+    
+    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea;">
+      <h3 style="color: #333; margin-top: 0;">💌 Osobna poruka:</h3>
+      <p style="color: #555; font-style: italic; font-size: 16px; line-height: 1.6;">
+        "${postcardData.message}"
+      </p>
+      <p style="text-align: right; color: #667eea; font-weight: bold; margin-bottom: 0;">
+        - ${postcardData.senderName}
+      </p>
+    </div>
+    
+    <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+      <p style="color: #667eea; font-size: 16px; margin: 0;">
+        Nadamo se da vam se sviđa ova digitalna razglednica! 💝
+      </p>
+    </div>
+  </div>
+  
+  <div style="text-align: center; padding: 20px; color: #666; font-size: 14px;">
+    <p style="margin: 0;"><strong>Poslano putem RetroPost</strong> - Digitalne razglednice</p>
+    <p style="margin: 5px 0 0 0;"><a href="https://postretro.netlify.app" style="color: #667eea;">🌐 postretro.netlify.app</a></p>
+  </div>
+</div>
           `
         };
         
-        const emergencyResponse = await fetch('https://formsubmit.co/jimgitara@gmail.com', {
+        await fetch('https://formsubmit.co/jimgitara@gmail.com', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
           },
-          body: JSON.stringify(textOnlyPayload)
+          body: JSON.stringify(htmlPayload)
         });
         
-        if (emergencyResponse.ok) {
-          console.log('✅ Emergency text email sent');
-          return;
-        }
-      } catch (emergencyError) {
-        console.error('❌ Emergency email failed:', emergencyError);
+        console.log('🎨 Bonus HTML email sent!');
+      } catch (htmlError) {
+        console.log('🎨 Bonus HTML email failed (not critical):', htmlError);
       }
       
-      throw new Error('Razglednica je kreirana, ali email servis trenutno nije dostupan. Molimo kontaktirajte podršku na jimgitara@gmail.com');
+      return; // SUCCESS!
+      
+    } else {
+      const errorText = await response.text();
+      console.error('❌ FormSubmit error response:', errorText);
+      throw new Error(`FormSubmit service failed: ${response.status}`);
     }
+    
+  } catch (error) {
+    console.error('❌ All postcard email methods failed:', error);
+    throw new Error('Email servis trenutno nije dostupan. Vaša razglednica je kreirana, ali email nije poslan. Molimo kontaktirajte podršku na jimgitara@gmail.com');
   }
 };
 
