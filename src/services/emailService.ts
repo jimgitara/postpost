@@ -147,7 +147,7 @@ const generateFrontCanvasDirect = async (data: PostcardCanvasData): Promise<stri
       ctx.textAlign = 'right';
       ctx.fillText('RetroPost', 580, 380);
       
-      resolve(canvas.toDataURL('image/jpeg', 0.8));
+      resolve(canvas.toDataURL('image/jpeg', 0.6));
     };
     
     img.onerror = () => {
@@ -192,7 +192,7 @@ const generateFrontCanvasDirect = async (data: PostcardCanvasData): Promise<stri
         ctx.fillText(line, 300, startY + index * lineHeight);
       });
       
-      resolve(canvas.toDataURL('image/jpeg', 0.8));
+      resolve(canvas.toDataURL('image/jpeg', 0.6));
     };
     
     img.src = data.backgroundImageUrl;
@@ -294,7 +294,7 @@ const generateBackCanvasDirect = (data: PostcardCanvasData): string => {
   ctx.textAlign = 'center';
   ctx.fillText('RetroPost.com - Digitalne razglednice', 300, 390);
   
-  return canvas.toDataURL('image/jpeg', 0.8);
+  return canvas.toDataURL('image/jpeg', 0.6);
 };
 
 // Fallback canvas generator
@@ -318,7 +318,7 @@ const generateFallbackCanvas = (text: string, color1: string, color2: string): s
   ctx.shadowBlur = 4;
   ctx.fillText(text, 300, 200);
   
-  return canvas.toDataURL('image/jpeg', 0.8);
+  return canvas.toDataURL('image/jpeg', 0.6);
 };
 
 // Legacy function for backward compatibility
