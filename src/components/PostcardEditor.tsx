@@ -1,0 +1,533 @@
+import React, { useState, useRef } from 'react';
+import { ArrowLeft, Type, Palette, Send, Download, Calendar, FileSignature as Signature, RotateCcw, Save } from 'lucide-react';
+import { PostcardTemplate, PostcardCustomization } from '../types';
+import { sendPostcard } from '../services/emailService';
+import html2canvas from 'html2canvas';
+
+interface PostcardEditorProps {
+  template: PostcardTemplate;
+  onBack: () => void;
+}
+
+const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => {
+  const frontRef = useRef<HTMLDivElement>(null);
+  const backRef = useRef<HTMLDivElement>(null);
+  const [step, setStep] = useState<'customize' | 'message' | 'send'>('customize');
+  const [showBack, setShowBack] = useState(false);
+  const [autoSaved, setAutoSaved] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [customization, setCustomization] = useState<PostcardCustomization>({
+    frontText: 'Pozdrav iz prekrasnog mjesta!',
+    frontTextColor: '#ffffff',
+    frontTextSize: 24,
+    frontTextFont: 'serif',
+    message: '',
+    signature: '',
+    recipientEmail: '',
+    recipientName: '',
+    senderName: '',
+  });
+
+  const fonts = [
+    { value: 'serif', label: 'Serif', className: 'font-serif' },
+    { value: 'sans', label: 'Sans-serif', className: 'font-sans' },
+    { value: 'mono', label: 'Monospace', className: 'font-mono' },
+    { value: 'cursive', label: 'Cursive', className: 'font-cursive' },
+  ];
+
+  const textSizes = [
+    { value: 16, label: 'Mala' },
+    { value: 20, label: 'Srednja' },
+    { value: 24, label: 'Velika' },
+    { value: 32, label: 'Vrlo velika' },
+  ];
+
+  const updateCustomization = (updates: Partial<PostcardCustomization>) => {
+    setCustomization(prev => ({ ...prev, ...updates }));
+    
+    // Auto-save simulation
+    setTimeout(() => {
+      setAutoSaved(true);
+      setTimeout(() => setAutoSaved(false), 2000);
+    }, 500);
+  };
+
+  const validateForm = () => {
+    if (step === 'send') {
+      if (!customization.recipientEmail || !customization.senderName) {
+        alert('Molimo unesite email primatelja i vaše ime.');
+        return false;
+      }
+      if (!customization.recipientEmail.includes('@')) {
+        alert('Molimo unesite valjanu email adresu.');
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const handleDownload = async () => {
+    if (frontRef.current && backRef.current) {
+      try {
+        const frontCanvas = await html2canvas(frontRef.current, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+        });
+        
+        const backCanvas = await html2canvas(backRef.current, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+        });
+        
+        // Download front
+        const frontLink = document.createElement('a');
+        frontLink.download = `razglednica-prednja-${template.name.toLowerCase().replace(/\s+/g, '-')}.png`;
+        frontLink.href = frontCanvas.toDataURL();
+        frontLink.click();
+        
+        // Download back
+        setTimeout(() => {
+          const backLink = document.createElement('a');
+          backLink.download = `razglednica-straznja-${template.name.toLowerCase().replace(/\s+/g, '-')}.png`;
+          backLink.href = backCanvas.toDataURL();
+          backLink.click();
+        }, 500);
+      } catch (error) {
+        console.error('Error downloading postcard:', error);
+      }
+    }
+  };
+
+  const handleSend = async () => {
+    if (!validateForm()) return;
+    
+    setIsSending(true);
+    
+    try {
+      await sendPostcard({
+        recipientEmail: customization.recipientEmail,
+        recipientName: customization.recipientName || 'Dragi prijatelj',
+        senderName: customization.senderName,
+        message: customization.message || customization.frontText,
+      });
+      
+      alert(`Razglednica je uspješno poslana na ${customization.recipientEmail}!\nPrimatelj će uskoro dobiti vašu prekrasnu razglednicu.`);
+      onBack();
+    } catch (error) {
+      console.error('Error sending postcard:', error);
+      alert('Dogodila se greška pri slanju razglednice. Molimo pokušajte ponovno.');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleNextStep = () => {
+    if (step === 'customize') {
+      setStep('message');
+    } else if (step === 'message') {
+      setStep('send');
+    }
+  };
+
+  const renderCustomizeStep = () => (
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Postcard Preview */}
+      <div className="lg:col-span-2 space-y-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-semibold text-gray-900">Live pregled razglednice</h3>
+          <div className="flex items-center space-x-4">
+            {autoSaved && (
+              <div className="flex items-center space-x-2 text-green-600 text-sm">
+                <Save className="h-4 w-4" />
+                <span>Automatski spremljeno</span>
+              </div>
+            )}
+            <button
+              onClick={() => setShowBack(!showBack)}
+              className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-all"
+            >
+              <RotateCcw className="h-4 w-4" />
+              <span>{showBack ? 'Prednja strana' : 'Stražnja strana'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Front Side */}
+        <div 
+          ref={frontRef}
+          className={`relative bg-white rounded-2xl shadow-2xl overflow-hidden aspect-[3/2] max-w-lg mx-auto transition-all duration-500 ${showBack ? 'hidden' : 'block'}`}
+        >
+          <img
+            src={template.image}
+            alt={template.name}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black/20"></div>
+          <div className="absolute inset-0 flex items-center justify-center p-8">
+            <div 
+              className={`text-center ${customization.frontTextFont === 'serif' ? 'font-serif' : customization.frontTextFont === 'sans' ? 'font-sans' : customization.frontTextFont === 'mono' ? 'font-mono' : 'font-cursive'}`}
+              style={{
+                color: customization.frontTextColor,
+                fontSize: `${customization.frontTextSize}px`,
+                textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+                lineHeight: '1.2'
+              }}
+            >
+              {customization.frontText}
+            </div>
+          </div>
+        </div>
+
+        {/* Back Side */}
+        <div 
+          ref={backRef}
+          className={`bg-white rounded-2xl shadow-2xl aspect-[3/2] max-w-lg mx-auto p-6 flex flex-col transition-all duration-500 ${showBack ? 'block' : 'hidden'}`}
+        >
+          {/* Message Area */}
+          <div className="flex-1 border-b-2 border-gray-200 pb-4 mb-4">
+            <div className="text-left">
+              <div className="text-xs font-semibold text-gray-500 mb-2 tracking-wide">PORUKA:</div>
+              <div className="min-h-[120px] text-sm leading-relaxed text-gray-800">
+                {customization.message || 'Ovdje će biti vaša osobna poruka...'}
+              </div>
+              {customization.signature && (
+                <div className="mt-4 text-right">
+                  <div className="text-sm italic text-gray-600">- {customization.signature}</div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Address Area */}
+          <div className="flex justify-between items-end">
+            <div className="text-left">
+              <div className="text-xs font-semibold text-gray-500 mb-1 tracking-wide">PRIMA:</div>
+              <div className="text-sm text-gray-800">
+                {customization.recipientName || 'Ime primatelja'}
+              </div>
+              <div className="text-xs text-gray-600">
+                {customization.recipientEmail || 'email@primjer.com'}
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-xs font-semibold text-gray-500 mb-1 tracking-wide">ŠALJE:</div>
+              <div className="text-sm text-gray-800">
+                {customization.senderName || 'Vaše ime'}
+              </div>
+            </div>
+          </div>
+
+          {/* Postcard branding */}
+          <div className="mt-4 text-center">
+            <div className="text-xs text-gray-400">RetroPost.com</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Customization Controls Sidebar */}
+      <div className="space-y-6 bg-white rounded-2xl shadow-lg p-6">
+        <h3 className="text-xl font-semibold text-gray-900">Personaliziraj tekst</h3>
+        
+        {/* Text Input */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <Type className="inline h-4 w-4 mr-1" />
+            Tekst na razglednici
+          </label>
+          <textarea
+            value={customization.frontText}
+            onChange={(e) => updateCustomization({ frontText: e.target.value })}
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none"
+            rows={3}
+            placeholder="Unesite svoj tekst..."
+          />
+        </div>
+
+        {/* Font Selection */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Font</label>
+          <div className="grid grid-cols-2 gap-2">
+            {fonts.map(font => (
+              <button
+                key={font.value}
+                onClick={() => updateCustomization({ frontTextFont: font.value })}
+                className={`p-3 rounded-lg border transition-all text-sm ${
+                  customization.frontTextFont === font.value
+                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    : 'border-gray-200 hover:border-gray-300'
+                } ${font.className}`}
+              >
+                {font.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Text Size */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Veličina teksta</label>
+          <div className="grid grid-cols-2 gap-2">
+            {textSizes.map(size => (
+              <button
+                key={size.value}
+                onClick={() => updateCustomization({ frontTextSize: size.value })}
+                className={`p-3 rounded-lg border transition-all text-sm ${
+                  customization.frontTextSize === size.value
+                    ? 'border-primary-500 bg-primary-50 text-primary-700'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                {size.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Text Color */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <Palette className="inline h-4 w-4 mr-1" />
+            Boja teksta
+          </label>
+          <div className="flex flex-wrap gap-2">
+            {['#ffffff', '#000000', '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'].map(color => (
+              <button
+                key={color}
+                onClick={() => updateCustomization({ frontTextColor: color })}
+                className={`w-8 h-8 rounded-full border-2 transition-all ${
+                  customization.frontTextColor === color ? 'border-gray-800 scale-110' : 'border-gray-300'
+                }`}
+                style={{ backgroundColor: color }}
+              />
+            ))}
+            <input
+              type="color"
+              value={customization.frontTextColor}
+              onChange={(e) => updateCustomization({ frontTextColor: e.target.value })}
+              className="w-8 h-8 rounded-full border-2 border-gray-300 cursor-pointer"
+            />
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col space-y-3 pt-4">
+          <button
+            onClick={handleDownload}
+            className="flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-all"
+          >
+            <Download className="h-4 w-4" />
+            <span>Preuzmi</span>
+          </button>
+          <button
+            onClick={handleNextStep}
+            className="bg-gradient-to-r from-primary-500 to-secondary-500 text-white py-3 rounded-xl font-semibold hover:from-primary-600 hover:to-secondary-600 transition-all"
+          >
+            Nastavi →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderMessageStep = () => (
+    <div className="max-w-2xl mx-auto space-y-6">
+      <h3 className="text-2xl font-semibold text-gray-900 text-center">Napišite poruku</h3>
+      
+      <div className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Osobna poruka</label>
+          <textarea
+            value={customization.message}
+            onChange={(e) => updateCustomization({ message: e.target.value })}
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+            rows={6}
+            placeholder="Napišite svoju osobnu poruku..."
+          />
+          <div className="text-xs text-gray-500 mt-1">
+            {customization.message.length}/500 znakova
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <Signature className="inline h-4 w-4 mr-1" />
+            Potpis
+          </label>
+          <input
+            type="text"
+            value={customization.signature}
+            onChange={(e) => updateCustomization({ signature: e.target.value })}
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+            placeholder="Vaš potpis..."
+          />
+        </div>
+
+        <div className="flex space-x-4">
+          <button
+            onClick={() => setStep('customize')}
+            className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-all"
+          >
+            ← Natrag
+          </button>
+          <button
+            onClick={handleNextStep}
+            className="flex-1 bg-gradient-to-r from-primary-500 to-secondary-500 text-white py-3 rounded-xl font-semibold hover:from-primary-600 hover:to-secondary-600 transition-all"
+          >
+            Nastavi →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSendStep = () => (
+    <div className="max-w-2xl mx-auto space-y-6">
+      <h3 className="text-2xl font-semibold text-gray-900 text-center">Pošaljite razglednicu</h3>
+      
+      <div className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Ime primatelja *</label>
+            <input
+              type="text"
+              value={customization.recipientName}
+              onChange={(e) => updateCustomization({ recipientName: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+              placeholder="Ime primatelja"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Email primatelja *</label>
+            <input
+              type="email"
+              value={customization.recipientEmail}
+              onChange={(e) => updateCustomization({ recipientEmail: e.target.value })}
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+              placeholder="email@primjer.com"
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Vaše ime *</label>
+          <input
+            type="text"
+            value={customization.senderName}
+            onChange={(e) => updateCustomization({ senderName: e.target.value })}
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+            placeholder="Vaše ime"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            <Calendar className="inline h-4 w-4 mr-1" />
+            Zakaži slanje (opcionalno)
+          </label>
+          <input
+            type="datetime-local"
+            value={customization.scheduledDate || ''}
+            onChange={(e) => updateCustomization({ scheduledDate: e.target.value })}
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+          />
+          <div className="text-xs text-gray-500 mt-1">
+            Ostavite prazno za trenutno slanje
+          </div>
+        </div>
+
+        {/* Delivery Estimate */}
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div className="flex items-center space-x-2 text-blue-800">
+            <Calendar className="h-4 w-4" />
+            <span className="font-medium">Instant dostava putem emaila</span>
+          </div>
+          <p className="text-blue-600 text-sm mt-1">
+            Vaša razglednica će biti dostavljena odmah na email adresu primatelja
+          </p>
+        </div>
+
+        <div className="flex space-x-4">
+          <button
+            onClick={() => setStep('message')}
+            className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-all"
+            disabled={isSending}
+          >
+            ← Natrag
+          </button>
+          <button
+            onClick={handleSend}
+            disabled={!customization.recipientEmail || !customization.senderName || isSending}
+            className="flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white py-3 rounded-xl font-semibold hover:from-primary-600 hover:to-secondary-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSending ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Šalje se...</span>
+              </>
+            ) : (
+              <>
+                <Send className="h-4 w-4" />
+                <span>Pošalji razglednicu</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <button
+            onClick={onBack}
+            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="h-5 w-5" />
+            <span>Natrag na galeriju</span>
+          </button>
+          
+          {/* Progress Steps */}
+          <div className="flex items-center space-x-4">
+            {['customize', 'message', 'send'].map((stepName, index) => (
+              <div key={stepName} className="flex items-center">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
+                  step === stepName ? 'bg-primary-500 text-white' : 
+                  ['customize', 'message', 'send'].indexOf(step) > index ? 'bg-green-500 text-white' : 
+                  'bg-gray-200 text-gray-600'
+                }`}>
+                  {index + 1}
+                </div>
+                {index < 2 && (
+                  <div className={`w-8 h-0.5 mx-2 transition-all ${
+                    ['customize', 'message', 'send'].indexOf(step) > index ? 'bg-green-500' : 'bg-gray-200'
+                  }`}></div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="text-sm text-gray-500">
+            Korak {['customize', 'message', 'send'].indexOf(step) + 1} od 3
+          </div>
+        </div>
+
+        {/* Step Content */}
+        <div className="animate-fade-in">
+          {step === 'customize' && renderCustomizeStep()}
+          {step === 'message' && renderMessageStep()}
+          {step === 'send' && renderSendStep()}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PostcardEditor;
