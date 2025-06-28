@@ -43,6 +43,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
   ];
 
   const updateCustomization = (updates: Partial<PostcardCustomization>) => {
+    console.log('Updating customization:', updates);
     setCustomization(prev => ({ ...prev, ...updates }));
     
     // Auto-save simulation
@@ -53,6 +54,8 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
   };
 
   const validateForm = () => {
+    console.log('Validating form, step:', step, 'customization:', customization);
+    
     if (step === 'send') {
       if (!customization.recipientEmail || !customization.senderName) {
         alert('Molimo unesite email primatelja i vaše ime.');
@@ -67,6 +70,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
   };
 
   const handleDownload = async () => {
+    console.log('Starting download...');
     if (frontRef.current && backRef.current) {
       try {
         const frontCanvas = await html2canvas(frontRef.current, {
@@ -94,16 +98,25 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
           backLink.href = backCanvas.toDataURL();
           backLink.click();
         }, 500);
+        
+        console.log('Download completed successfully');
       } catch (error) {
         console.error('Error downloading postcard:', error);
+        alert('Greška pri preuzimanju razglednice. Molimo pokušajte ponovno.');
       }
     }
   };
 
   const handleSend = async () => {
-    if (!validateForm()) return;
+    console.log('Send button clicked, validating form...');
+    
+    if (!validateForm()) {
+      console.log('Form validation failed');
+      return;
+    }
     
     setIsSending(true);
+    console.log('Starting to send postcard...');
     
     try {
       await sendPostcard({
@@ -113,6 +126,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
         message: customization.message || customization.frontText,
       });
       
+      console.log('Postcard sent successfully');
       alert(`Razglednica je uspješno poslana na ${customization.recipientEmail}!\nPrimatelj će uskoro dobiti vašu prekrasnu razglednicu.`);
       onBack();
     } catch (error) {
@@ -124,6 +138,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
   };
 
   const handleNextStep = () => {
+    console.log('Next step clicked, current step:', step);
     if (step === 'customize') {
       setStep('message');
     } else if (step === 'message') {
@@ -344,6 +359,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
             rows={6}
             placeholder="Napišite svoju osobnu poruku..."
+            maxLength={500}
           />
           <div className="text-xs text-gray-500 mt-1">
             {customization.message.length}/500 znakova
@@ -482,7 +498,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
   );
 
   return (
-    <div className="min-h-screen py-8">
+    <div className="min-h-screen py-8 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">

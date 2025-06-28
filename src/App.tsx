@@ -17,17 +17,20 @@ function App() {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
   const handleTemplateSelect = (template: PostcardTemplate) => {
+    console.log('App: Template selected:', template);
     setSelectedTemplate(template);
     setShowEditor(true);
     setShowUpload(false);
   };
 
   const handleStartCreating = () => {
+    console.log('App: Start creating clicked');
     setShowUpload(true);
     setShowEditor(false);
   };
 
   const handlePhotoUploaded = (imageUrl: string) => {
+    console.log('App: Photo uploaded:', imageUrl);
     setUploadedImage(imageUrl);
     const customTemplate: PostcardTemplate = {
       id: 'custom',
@@ -42,6 +45,7 @@ function App() {
   };
 
   const handleBackToGallery = () => {
+    console.log('App: Back to gallery clicked');
     setShowEditor(false);
     setShowUpload(false);
     setSelectedTemplate(null);
@@ -55,8 +59,10 @@ function App() {
     }
   };
 
+  console.log('App render - showEditor:', showEditor, 'showUpload:', showUpload, 'selectedTemplate:', selectedTemplate);
+
   return (
-    <div className="min-h-screen bg-cyber-gradient">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       <Header onStartCreating={handleStartCreating} />
       
       {!showEditor && !showUpload ? (
@@ -69,11 +75,24 @@ function App() {
         </>
       ) : showUpload ? (
         <PhotoUpload onPhotoUploaded={handlePhotoUploaded} onBack={handleBackToGallery} />
-      ) : (
+      ) : selectedTemplate ? (
         <PostcardEditor 
-          template={selectedTemplate!} 
+          template={selectedTemplate} 
           onBack={handleBackToGallery}
         />
+      ) : (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-white text-center">
+            <h2 className="text-2xl font-bold mb-4">Greška</h2>
+            <p className="mb-4">Nema odabranog predloška</p>
+            <button 
+              onClick={handleBackToGallery}
+              className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              Natrag na galeriju
+            </button>
+          </div>
+        </div>
       )}
       
       <Footer />

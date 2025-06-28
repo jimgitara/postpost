@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, Heart, Eye, Zap, BrainCircuit as Circuit } from 'lucide-react';
+import { Search, Filter, Heart, Eye, Zap, Sparkles } from 'lucide-react';
 import { PostcardTemplate } from '../types';
 
 interface GalleryProps {
@@ -83,7 +83,9 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
     return matchesSearch && matchesCategory;
   });
 
-  const handleTemplateClick = (template: PostcardTemplate) => {
+  const handleTemplateClick = (template: PostcardTemplate, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
     console.log('Template clicked:', template);
     onTemplateSelect(template);
   };
@@ -146,7 +148,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
               key={template.id}
               className="group relative bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 transform hover:-translate-y-2 overflow-hidden animate-fade-in border border-blue-400/20 hover:border-blue-400/40 cursor-pointer"
               style={{ animationDelay: `${index * 100}ms` }}
-              onClick={() => handleTemplateClick(template)}
+              onClick={(e) => handleTemplateClick(template, e)}
             >
               {/* Image */}
               <div className="relative overflow-hidden">
@@ -189,13 +191,13 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleTemplateClick(template);
+                    handleTemplateClick(template, e);
                   }}
                   className="group relative w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 transform hover:scale-105 overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-white/10 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                   <span className="relative z-10 flex items-center justify-center space-x-2">
-                    <Circuit className="h-4 w-4" />
+                    <Sparkles className="h-4 w-4" />
                     <span>Odaberi predložak</span>
                   </span>
                 </button>

@@ -2,9 +2,9 @@ import emailjs from '@emailjs/browser';
 
 // EmailJS Configuration
 const EMAILJS_CONFIG = {
-  serviceId: 'service_retropost', // Replace with your EmailJS service ID
-  templateId: 'template_contact', // Replace with your EmailJS template ID
-  publicKey: 'YOUR_PUBLIC_KEY', // Replace with your EmailJS public key
+  serviceId: 'service_retropost',
+  templateId: 'template_contact',
+  publicKey: 'YOUR_PUBLIC_KEY',
 };
 
 interface EmailData {
@@ -52,23 +52,36 @@ export const sendEmail = async (formData: EmailData): Promise<void> => {
 };
 
 export const sendPostcard = async (postcardData: PostcardEmailData): Promise<void> => {
+  console.log('Sending postcard with data:', postcardData);
+  
   try {
-    // Create a proper form submission for postcard
-    const formData = new FormData();
-    formData.append('form-name', 'postcard');
-    formData.append('recipient_name', postcardData.recipientName);
-    formData.append('recipient_email', postcardData.recipientEmail);
-    formData.append('sender_name', postcardData.senderName);
-    formData.append('message', postcardData.message);
-    
-    const response = await fetch("/", {
+    // Primary: Try Netlify Forms
+    const netlifyResponse = await fetch("/", {
       method: "POST",
-      body: formData
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: encode({
+        "form-name": "postcard",
+        recipient_name: postcardData.recipientName,
+        recipient_email: postcardData.recipientEmail,
+        sender_name: postcardData.senderName,
+        message: postcardData.message
+      })
     });
 
-    if (!response.ok) {
-      // Fallback to FormSubmit if Netlify fails
-      const fallbackResponse = await fetch('https://formsubmit.co/jimgitara@gmail.com', {
+    if (netlifyResponse.ok) {
+      console.log('Netlify form submission successful');
+      return;
+    } else {
+      console.log('Netlify failed, trying FormSubmit backup');
+      throw new Error('Netlify form submission failed');
+    }
+    
+  } catch (error) {
+    console.log('Using FormSubmit backup service');
+    
+    try {
+      // Backup: FormSubmit.co
+      const formSubmitResponse = await fetch('https://formsubmit.co/jimgitara@gmail.com', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -78,6 +91,7 @@ export const sendPostcard = async (postcardData: PostcardEmailData): Promise<voi
           _subject: `Nova razglednica od ${postcardData.senderName}`,
           _template: 'table',
           _captcha: 'false',
+          _next: 'https://retropost.netlify.app/success',
           sender_name: postcardData.senderName,
           recipient_name: postcardData.recipientName,
           recipient_email: postcardData.recipientEmail,
@@ -95,16 +109,16 @@ Poslano putem RetroPost - Digitalne Razglednice
         })
       });
 
-      if (!fallbackResponse.ok) {
-        throw new Error('Both Netlify and FormSubmit failed');
+      if (formSubmitResponse.ok) {
+        console.log('FormSubmit backup successful');
+        return;
+      } else {
+        throw new Error('FormSubmit service failed');
       }
+    } catch (backupError) {
+      console.error('All email services failed:', backupError);
+      throw new Error('Sve email usluge su neuspješne. Molimo pokušajte ponovno.');
     }
-
-    return;
-    
-  } catch (error) {
-    console.error('Error sending postcard:', error);
-    throw error;
   }
 };
 
