@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Type, Palette, Send, Download, Calendar, FileSignature as Signature, RotateCcw, Save, AlertCircle, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Type, Palette, Send, Download, Calendar, FileSignature as Signature, RotateCcw, Save, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 import { PostcardTemplate, PostcardCustomization } from '../types';
 import { sendPostcard, capturePostcardImages } from '../services/emailService';
 
@@ -14,7 +14,8 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
   const [step, setStep] = useState<'customize' | 'message' | 'send'>('customize');
   const [showBack, setShowBack] = useState(false);
   const [autoSaved, setAutoSaved] = useState(false);
-  const [isSending, setSending] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
   const [sendSuccess, setSendSuccess] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -111,6 +112,8 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
 
     try {
       setSendError(null);
+      setIsCapturing(true);
+      
       const { frontImage, backImage } = await capturePostcardImages(frontRef.current, backRef.current);
       
       // Download front
@@ -131,6 +134,8 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
     } catch (error) {
       console.error('Error downloading postcard:', error);
       setSendError('Greška pri preuzimanju razglednice. Molimo pokušajte ponovno.');
+    } finally {
+      setIsCapturing(false);
     }
   };
 
@@ -147,16 +152,19 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
       return;
     }
     
-    setSending(true);
+    setIsSending(true);
+    setIsCapturing(true);
     setSendError(null);
     setSendSuccess(false);
     console.log('Starting to send postcard...');
     
     try {
-      // Capture postcard images
+      // Capture postcard images with progress
       console.log('Capturing postcard images...');
       const { frontImage, backImage } = await capturePostcardImages(frontRef.current, backRef.current);
       console.log('Images captured successfully');
+      
+      setIsCapturing(false);
       
       // Send postcard with images
       await sendPostcard({
@@ -181,7 +189,8 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
       const errorMessage = error instanceof Error ? error.message : 'Nepoznata greška pri slanju razglednice';
       setSendError(errorMessage);
     } finally {
-      setSending(false);
+      setIsSending(false);
+      setIsCapturing(false);
     }
   };
 
@@ -389,11 +398,20 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
         <div className="flex flex-col space-y-3 pt-4">
           <button
             onClick={handleDownload}
-            disabled={!refsReady}
+            disabled={!refsReady || isCapturing}
             className="flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Download className="h-4 w-4" />
-            <span>Preuzmi</span>
+            {isCapturing ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                <span>Priprema...</span>
+              </>
+            ) : (
+              <>
+                <Download className="h-4 w-4" />
+                <span>Preuzmi</span>
+              </>
+            )}
           </button>
           <button
             onClick={handleNextStep}
@@ -487,12 +505,25 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
           </div>
         )}
 
+        {/* Capturing Status */}
+        {isCapturing && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+              <span className="text-blue-800 font-medium">Priprema razglednice...</span>
+            </div>
+            <p className="text-blue-600 text-sm mt-1">
+              Molimo pričekajte dok se razglednica priprema za slanje
+            </p>
+          </div>
+        )}
+
         {/* Ready Status */}
-        {!refsReady && (
+        {!refsReady && !isCapturing && (
           <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
             <div className="flex items-center space-x-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
-              <span className="text-orange-800 font-medium">Priprema razglednice...</span>
+              <Clock className="h-4 w-4 text-orange-600" />
+              <span className="text-orange-800 font-medium">Učitava razglednicu...</span>
             </div>
           </div>
         )}
@@ -577,7 +608,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
             {isSending ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>Šalje se...</span>
+                <span>{isCapturing ? 'Priprema...' : 'Šalje se...'}</span>
               </>
             ) : sendSuccess ? (
               <>

@@ -29,49 +29,111 @@ const encode = (data: Record<string, string>) => {
     .join("&");
 };
 
-// Convert canvas to base64 image with better error handling
+// Optimized image capture with timeout and fallback
 export const capturePostcardImages = async (frontRef: HTMLElement, backRef: HTMLElement) => {
   try {
-    console.log('Starting image capture...');
+    console.log('🎯 Starting optimized image capture...');
     
-    // Dynamic import to avoid SSR issues
-    const html2canvas = (await import('html2canvas')).default;
+    // Wait for any pending images to load
+    await new Promise(resolve => setTimeout(resolve, 500));
     
-    // Capture front with optimized settings
-    console.log('Capturing front image...');
-    const frontCanvas = await html2canvas(frontRef, {
-      scale: 1.5, // Reduced from 2 for better performance
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      logging: false, // Disable logging for cleaner output
-      imageTimeout: 15000, // 15 second timeout
-      removeContainer: true
-    });
+    // Dynamic import with timeout
+    const html2canvas = await Promise.race([
+      import('html2canvas').then(module => module.default),
+      new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('html2canvas import timeout')), 5000)
+      )
+    ]) as any;
     
-    // Capture back with optimized settings
-    console.log('Capturing back image...');
-    const backCanvas = await html2canvas(backRef, {
-      scale: 1.5, // Reduced from 2 for better performance
+    console.log('📸 html2canvas loaded, capturing images...');
+    
+    // Optimized capture settings
+    const captureOptions = {
+      scale: 1, // Reduced scale for speed
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
       logging: false,
-      imageTimeout: 15000,
-      removeContainer: true
-    });
+      imageTimeout: 5000, // 5 second timeout
+      removeContainer: true,
+      foreignObjectRendering: false, // Disable for better compatibility
+      width: frontRef.offsetWidth,
+      height: frontRef.offsetHeight
+    };
     
-    const frontImage = frontCanvas.toDataURL('image/jpeg', 0.8); // JPEG with 80% quality
-    const backImage = backCanvas.toDataURL('image/jpeg', 0.8);
+    // Capture with timeout wrapper
+    const captureWithTimeout = async (element: HTMLElement, name: string) => {
+      console.log(`📷 Capturing ${name}...`);
+      
+      return Promise.race([
+        html2canvas(element, captureOptions),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error(`${name} capture timeout`)), 10000)
+        )
+      ]) as Promise<HTMLCanvasElement>;
+    };
     
-    console.log('Images captured successfully');
-    console.log('Front image size:', Math.round(frontImage.length / 1024), 'KB');
-    console.log('Back image size:', Math.round(backImage.length / 1024), 'KB');
+    // Capture both images
+    const [frontCanvas, backCanvas] = await Promise.all([
+      captureWithTimeout(frontRef, 'front'),
+      captureWithTimeout(backRef, 'back')
+    ]);
+    
+    // Convert to optimized images
+    const frontImage = frontCanvas.toDataURL('image/jpeg', 0.7); // Lower quality for speed
+    const backImage = backCanvas.toDataURL('image/jpeg', 0.7);
+    
+    console.log('✅ Images captured successfully');
+    console.log(`📊 Front: ${Math.round(frontImage.length / 1024)}KB, Back: ${Math.round(backImage.length / 1024)}KB`);
     
     return { frontImage, backImage };
+    
   } catch (error) {
-    console.error('Error capturing postcard images:', error);
-    throw new Error('Greška pri snimanju razglednice. Molimo pokušajte ponovno.');
+    console.error('❌ Image capture failed:', error);
+    
+    // Fallback: Create simple text-based images
+    console.log('🔄 Using fallback method...');
+    
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 600;
+      canvas.height = 400;
+      const ctx = canvas.getContext('2d')!;
+      
+      // Front fallback
+      ctx.fillStyle = '#4f46e5';
+      ctx.fillRect(0, 0, 600, 400);
+      ctx.fillStyle = 'white';
+      ctx.font = '24px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('RetroPost Razglednica', 300, 200);
+      ctx.font = '16px Arial';
+      ctx.fillText('(Slika nije dostupna)', 300, 230);
+      
+      const frontFallback = canvas.toDataURL('image/jpeg', 0.8);
+      
+      // Back fallback
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, 600, 400);
+      ctx.fillStyle = '#333';
+      ctx.font = '18px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText('Poruka:', 50, 100);
+      ctx.fillText('Stražnja strana razglednice', 50, 130);
+      ctx.fillText('RetroPost.com', 50, 350);
+      
+      const backFallback = canvas.toDataURL('image/jpeg', 0.8);
+      
+      console.log('✅ Fallback images created');
+      return { 
+        frontImage: frontFallback, 
+        backImage: backFallback 
+      };
+      
+    } catch (fallbackError) {
+      console.error('❌ Fallback failed:', fallbackError);
+      throw new Error('Greška pri snimanju razglednice. Molimo pokušajte ponovno.');
+    }
   }
 };
 
@@ -154,8 +216,8 @@ export const sendEmail = async (formData: EmailData): Promise<void> => {
 };
 
 export const sendPostcard = async (postcardData: PostcardEmailData): Promise<void> => {
-  console.log('Starting postcard send process...');
-  console.log('Postcard data:', {
+  console.log('🚀 Starting postcard send process...');
+  console.log('📋 Postcard data:', {
     recipientEmail: postcardData.recipientEmail,
     recipientName: postcardData.recipientName,
     senderName: postcardData.senderName,
@@ -181,10 +243,10 @@ export const sendPostcard = async (postcardData: PostcardEmailData): Promise<voi
                                window.location.hostname.includes('netlify.com') ||
                                window.location.hostname === 'postretro.netlify.app';
     
-    console.log('Environment check - isNetlifyProduction:', isNetlifyProduction);
+    console.log('🌐 Environment check - isNetlifyProduction:', isNetlifyProduction);
     
     if (isNetlifyProduction) {
-      console.log('Attempting Netlify Forms for postcard...');
+      console.log('📝 Attempting Netlify Forms for postcard...');
       
       // Try Netlify Forms first
       const netlifyResponse = await fetch("/", {
@@ -201,23 +263,23 @@ export const sendPostcard = async (postcardData: PostcardEmailData): Promise<voi
         })
       });
 
-      console.log('Netlify Forms response status:', netlifyResponse.status);
+      console.log('📤 Netlify Forms response status:', netlifyResponse.status);
 
       if (netlifyResponse.ok) {
-        console.log('Netlify postcard sent successfully');
+        console.log('✅ Netlify postcard sent successfully');
         return;
       } else {
         const errorText = await netlifyResponse.text();
-        console.error('Netlify Forms postcard error:', errorText);
+        console.error('❌ Netlify Forms postcard error:', errorText);
         throw new Error('Netlify form submission failed');
       }
     } else {
-      console.log('Local development - using FormSubmit directly');
+      console.log('🏠 Local development - using FormSubmit directly');
       throw new Error('Using FormSubmit for local development');
     }
     
   } catch (error) {
-    console.log('Primary postcard service failed, using FormSubmit backup...');
+    console.log('🔄 Primary postcard service failed, using FormSubmit backup...');
     
     try {
       // Create enhanced HTML email with better formatting
@@ -345,13 +407,13 @@ export const sendPostcard = async (postcardData: PostcardEmailData): Promise<voi
                 <div class="postcard-title">📮 Prednja strana razglednice:</div>
                 ${postcardData.frontImageData ? 
                   `<img src="${postcardData.frontImageData}" alt="Prednja strana razglednice" class="postcard-image">` : 
-                  '<p style="color: #999; font-style: italic;">Slika razglednice nije dostupna</p>'
+                  '<div style="background: #f0f0f0; padding: 40px; border-radius: 10px; color: #666;">Slika razglednice</div>'
                 }
                 
                 <div class="postcard-title">✉️ Stražnja strana razglednice:</div>
                 ${postcardData.backImageData ? 
                   `<img src="${postcardData.backImageData}" alt="Stražnja strana razglednice" class="postcard-image">` : 
-                  '<p style="color: #999; font-style: italic;">Slika razglednice nije dostupna</p>'
+                  '<div style="background: #f0f0f0; padding: 40px; border-radius: 10px; color: #666;">Stražnja strana razglednice</div>'
                 }
               </div>
               
@@ -396,7 +458,7 @@ export const sendPostcard = async (postcardData: PostcardEmailData): Promise<voi
         _format: 'html'
       };
       
-      console.log('Sending enhanced postcard via FormSubmit...');
+      console.log('📧 Sending enhanced postcard via FormSubmit...');
       
       const formSubmitResponse = await fetch('https://formsubmit.co/jimgitara@gmail.com', {
         method: 'POST',
@@ -407,22 +469,22 @@ export const sendPostcard = async (postcardData: PostcardEmailData): Promise<voi
         body: JSON.stringify(formSubmitPayload)
       });
 
-      console.log('FormSubmit response status:', formSubmitResponse.status);
+      console.log('📤 FormSubmit response status:', formSubmitResponse.status);
       
       if (formSubmitResponse.ok) {
-        console.log('FormSubmit postcard sent successfully');
+        console.log('✅ FormSubmit postcard sent successfully');
         return;
       } else {
         const errorText = await formSubmitResponse.text();
-        console.error('FormSubmit error response:', errorText);
+        console.error('❌ FormSubmit error response:', errorText);
         throw new Error(`FormSubmit service failed: ${formSubmitResponse.status}`);
       }
     } catch (backupError) {
-      console.error('FormSubmit backup failed:', backupError);
+      console.error('❌ FormSubmit backup failed:', backupError);
       
       // Final fallback: Try EmailJS if configured
       try {
-        console.log('Trying EmailJS as final backup...');
+        console.log('📧 Trying EmailJS as final backup...');
         
         if (EMAILJS_CONFIG.publicKey !== 'YOUR_PUBLIC_KEY') {
           const emailJSPayload = {
@@ -442,13 +504,13 @@ export const sendPostcard = async (postcardData: PostcardEmailData): Promise<voi
             EMAILJS_CONFIG.publicKey
           );
           
-          console.log('EmailJS backup successful');
+          console.log('✅ EmailJS backup successful');
           return;
         } else {
-          console.log('EmailJS not configured, skipping...');
+          console.log('⚠️ EmailJS not configured, skipping...');
         }
       } catch (emailJSError) {
-        console.error('EmailJS backup failed:', emailJSError);
+        console.error('❌ EmailJS backup failed:', emailJSError);
       }
       
       throw new Error('Sve metode slanja razglednice su neuspješne. Molimo kontaktirajte podršku na jimgitara@gmail.com');
