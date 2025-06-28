@@ -1,8 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { ArrowLeft, Type, Palette, Send, Download, Calendar, FileSignature as Signature, RotateCcw, Save } from 'lucide-react';
 import { PostcardTemplate, PostcardCustomization } from '../types';
-import { sendPostcard } from '../services/emailService';
-import html2canvas from 'html2canvas';
+import { sendPostcard, capturePostcardImages } from '../services/emailService';
 
 interface PostcardEditorProps {
   template: PostcardTemplate;
@@ -89,29 +88,19 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
     console.log('Starting download...');
     if (frontRef.current && backRef.current) {
       try {
-        const frontCanvas = await html2canvas(frontRef.current, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-        });
-        
-        const backCanvas = await html2canvas(backRef.current, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-        });
+        const { frontImage, backImage } = await capturePostcardImages(frontRef.current, backRef.current);
         
         // Download front
         const frontLink = document.createElement('a');
         frontLink.download = `razglednica-prednja-${template.name.toLowerCase().replace(/\s+/g, '-')}.png`;
-        frontLink.href = frontCanvas.toDataURL();
+        frontLink.href = frontImage;
         frontLink.click();
         
         // Download back
         setTimeout(() => {
           const backLink = document.createElement('a');
           backLink.download = `razglednica-straznja-${template.name.toLowerCase().replace(/\s+/g, '-')}.png`;
-          backLink.href = backCanvas.toDataURL();
+          backLink.href = backImage;
           backLink.click();
         }, 500);
         
@@ -131,20 +120,33 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
       return;
     }
     
+    if (!frontRef.current || !backRef.current) {
+      setSendError('Greška: Razglednica nije spremna za slanje');
+      return;
+    }
+    
     setIsSending(true);
     setSendError(null);
     console.log('Starting to send postcard...');
     
     try {
+      // Capture postcard images
+      console.log('Capturing postcard images...');
+      const { frontImage, backImage } = await capturePostcardImages(frontRef.current, backRef.current);
+      console.log('Images captured successfully');
+      
+      // Send postcard with images
       await sendPostcard({
         recipientEmail: customization.recipientEmail,
         recipientName: customization.recipientName || 'Dragi prijatelj',
         senderName: customization.senderName,
         message: customization.message || customization.frontText,
+        frontImageData: frontImage,
+        backImageData: backImage
       });
       
       console.log('Postcard sent successfully');
-      alert(`✅ Razglednica je uspješno poslana!\n\n📧 Primatelj: ${customization.recipientEmail}\n👤 Od: ${customization.senderName}\n\nPrimatelj će uskoro dobiti vašu prekrasnu razglednicu u svom email sandučiću.`);
+      alert(`✅ Razglednica je uspješno poslana!\n\n📧 Primatelj: ${customization.recipientEmail}\n👤 Od: ${customization.senderName}\n\nPrimatelj će uskoro dobiti vašu prekrasnu razglednicu u svom email sandučiću s priloženim slikama.`);
       onBack();
     } catch (error) {
       console.error('Error sending postcard:', error);
@@ -199,6 +201,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
             src={template.image}
             alt={template.name}
             className="w-full h-full object-cover"
+            crossOrigin="anonymous"
           />
           <div className="absolute inset-0 bg-black/20"></div>
           <div className="absolute inset-0 flex items-center justify-center p-8">
@@ -491,10 +494,10 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
           <div className="flex items-center space-x-2 text-blue-800">
             <Calendar className="h-4 w-4" />
-            <span className="font-medium">Instant dostava putem emaila</span>
+            <span className="font-medium">Instant dostava putem emaila s priloženim slikama</span>
           </div>
           <p className="text-blue-600 text-sm mt-1">
-            Vaša razglednica će biti dostavljena odmah na email adresu primatelja
+            Vaša razglednica će biti dostavljena odmah na email adresu primatelja kao prekrasno formatiran HTML email s priloženim slikama prednje i stražnje strane.
           </p>
         </div>
 
