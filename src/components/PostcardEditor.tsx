@@ -16,7 +16,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
   const [autoSaved, setAutoSaved] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
-  const [refsReady, setRefsReady] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const [customization, setCustomization] = useState<PostcardCustomization>({
     frontText: 'Pozdrav iz prekrasnog mjesta!',
     frontTextColor: '#ffffff',
@@ -29,25 +29,19 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
     senderName: '',
   });
 
-  // Check if refs are ready
-  useEffect(() => {
-    const checkRefs = () => {
-      if (frontRef.current && backRef.current) {
-        setRefsReady(true);
-        console.log('Postcard refs are ready');
-      } else {
-        setRefsReady(false);
-        console.log('Postcard refs not ready yet');
-      }
-    };
+  // Quick refs check - don't wait for image loading
+  const refsReady = frontRef.current && backRef.current;
 
-    checkRefs();
-    
-    // Check again after a short delay to ensure DOM is fully rendered
-    const timer = setTimeout(checkRefs, 100);
+  // Check refs immediately when component mounts
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (frontRef.current && backRef.current) {
+        console.log('Postcard refs are ready');
+      }
+    }, 50); // Very short delay
     
     return () => clearTimeout(timer);
-  }, [step, showBack]);
+  }, [step]);
 
   const fonts = [
     { value: 'serif', label: 'Serif', className: 'font-serif' },
@@ -66,7 +60,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
   const updateCustomization = (updates: Partial<PostcardCustomization>) => {
     console.log('Updating customization:', updates);
     setCustomization(prev => ({ ...prev, ...updates }));
-    setSendError(null); // Clear any previous errors
+    setSendError(null);
     
     // Auto-save simulation
     setTimeout(() => {
@@ -108,7 +102,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
   const handleDownload = async () => {
     console.log('Starting download...');
     
-    if (!refsReady || !frontRef.current || !backRef.current) {
+    if (!frontRef.current || !backRef.current) {
       alert('Razglednica se još učitava. Molimo pričekajte trenutak i pokušajte ponovno.');
       return;
     }
@@ -145,9 +139,8 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
       return;
     }
     
-    if (!refsReady || !frontRef.current || !backRef.current) {
+    if (!frontRef.current || !backRef.current) {
       setSendError('Razglednica se još učitava. Molimo pričekajte trenutak.');
-      console.log('Refs not ready:', { refsReady, frontRef: !!frontRef.current, backRef: !!backRef.current });
       return;
     }
     
@@ -208,12 +201,6 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
                 <span>Automatski spremljeno</span>
               </div>
             )}
-            {!refsReady && (
-              <div className="flex items-center space-x-2 text-orange-600 text-sm">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
-                <span>Učitava se...</span>
-              </div>
-            )}
             <button
               onClick={() => setShowBack(!showBack)}
               className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-all"
@@ -237,10 +224,11 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
             crossOrigin="anonymous"
             onLoad={() => {
               console.log('Front image loaded');
-              setTimeout(() => setRefsReady(true), 100);
+              setImageLoaded(true);
             }}
             onError={(e) => {
               console.error('Front image failed to load:', e);
+              setImageLoaded(true); // Still allow usage even if image fails
             }}
           />
           <div className="absolute inset-0 bg-black/20"></div>
@@ -479,22 +467,15 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
           </div>
         )}
 
-        {/* Ready Status */}
-        <div className={`p-4 rounded-xl border ${refsReady ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200'}`}>
-          <div className="flex items-center space-x-2">
-            {refsReady ? (
-              <>
-                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-green-800 font-medium">Razglednica je spremna za slanje</span>
-              </>
-            ) : (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
-                <span className="text-orange-800 font-medium">Priprema razglednice...</span>
-              </>
-            )}
+        {/* Ready Status - Only show if not ready */}
+        {!refsReady && (
+          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+            <div className="flex items-center space-x-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
+              <span className="text-orange-800 font-medium">Priprema razglednice...</span>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
