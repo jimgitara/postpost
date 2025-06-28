@@ -15,6 +15,11 @@
   port = 5173
   publish = "dist"
 
+# Edge Functions
+[[edge_functions]]
+  function = "send-postcard"
+  path = "/.netlify/functions/send-postcard"
+
 # Security headers
 [[headers]]
   for = "/*"
@@ -52,7 +57,7 @@
 [build.processing.html]
   pretty_urls = true
 
-# Environment variables for forms (these are automatically available)
+# Environment variables for forms
 [context.production.environment]
   NETLIFY_FORMS_ENABLED = "true"
 

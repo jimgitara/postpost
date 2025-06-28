@@ -42,9 +42,9 @@ const encode = (data: Record<string, string>) => {
     .join("&");
 };
 
-// COMPLETELY DOM-INDEPENDENT Canvas generation
+// INSTANT Canvas generation - NO DOM dependency
 export const generatePostcardCanvasDirectly = async (data: PostcardCanvasData): Promise<{ frontImage: string; backImage: string }> => {
-  console.log('🎨 DIRECT Canvas generation - NO DOM dependency!');
+  console.log('🎨 DIRECT Canvas generation starting...');
   
   try {
     // Generate front and back in parallel
@@ -53,12 +53,12 @@ export const generatePostcardCanvasDirectly = async (data: PostcardCanvasData): 
       generateBackCanvasDirect(data)
     ]);
     
-    console.log('✅ DIRECT Canvas generation completed instantly!');
+    console.log('✅ DIRECT Canvas generation completed!');
     
     return { frontImage, backImage };
     
   } catch (error) {
-    console.error('❌ DIRECT Canvas generation failed:', error);
+    console.error('❌ Canvas generation failed:', error);
     
     // Emergency fallback
     const fallbackFront = generateFallbackCanvas('Pozdrav iz prekrasnog mjesta!', '#667eea', '#764ba2');
@@ -71,17 +71,14 @@ export const generatePostcardCanvasDirectly = async (data: PostcardCanvasData): 
   }
 };
 
-// INSTANT front canvas generation
+// Generate front canvas
 const generateFrontCanvasDirect = async (data: PostcardCanvasData): Promise<string> => {
-  console.log('🎨 Generating front canvas directly...');
-  
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
     canvas.width = 600;
     canvas.height = 400;
     const ctx = canvas.getContext('2d')!;
     
-    // Create background image
     const img = new Image();
     img.crossOrigin = 'anonymous';
     
@@ -106,7 +103,7 @@ const generateFrontCanvasDirect = async (data: PostcardCanvasData): Promise<stri
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       
-      // Add text shadow for better visibility
+      // Add text shadow
       ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
       ctx.shadowBlur = 4;
       ctx.shadowOffsetX = 2;
@@ -144,7 +141,7 @@ const generateFrontCanvasDirect = async (data: PostcardCanvasData): Promise<stri
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 0;
       
-      // Add subtle branding
+      // Add branding
       ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
       ctx.font = '12px Arial';
       ctx.textAlign = 'right';
@@ -154,8 +151,6 @@ const generateFrontCanvasDirect = async (data: PostcardCanvasData): Promise<stri
     };
     
     img.onerror = () => {
-      console.log('🎨 Image failed to load, creating gradient background');
-      
       // Create gradient background as fallback
       const gradient = ctx.createLinearGradient(0, 0, 600, 400);
       gradient.addColorStop(0, '#667eea');
@@ -163,7 +158,7 @@ const generateFrontCanvasDirect = async (data: PostcardCanvasData): Promise<stri
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, 600, 400);
       
-      // Add text with same styling as above
+      // Add text
       ctx.fillStyle = data.textColor;
       ctx.font = `bold ${data.fontSize}px Arial`;
       ctx.textAlign = 'center';
@@ -200,15 +195,12 @@ const generateFrontCanvasDirect = async (data: PostcardCanvasData): Promise<stri
       resolve(canvas.toDataURL('image/jpeg', 0.8));
     };
     
-    // Start loading image
     img.src = data.backgroundImageUrl;
   });
 };
 
-// INSTANT back canvas generation
+// Generate back canvas
 const generateBackCanvasDirect = (data: PostcardCanvasData): string => {
-  console.log('📝 Generating back canvas directly...');
-  
   const canvas = document.createElement('canvas');
   canvas.width = 600;
   canvas.height = 400;
@@ -312,14 +304,12 @@ const generateFallbackCanvas = (text: string, color1: string, color2: string): s
   canvas.height = 400;
   const ctx = canvas.getContext('2d')!;
   
-  // Gradient background
   const gradient = ctx.createLinearGradient(0, 0, 600, 400);
   gradient.addColorStop(0, color1);
   gradient.addColorStop(1, color2);
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, 600, 400);
   
-  // Text
   ctx.fillStyle = 'white';
   ctx.font = 'bold 24px Arial';
   ctx.textAlign = 'center';
@@ -331,11 +321,10 @@ const generateFallbackCanvas = (text: string, color1: string, color2: string): s
   return canvas.toDataURL('image/jpeg', 0.8);
 };
 
-// Legacy function for backward compatibility - now uses direct generation
+// Legacy function for backward compatibility
 export const capturePostcardImages = async (frontRef: HTMLElement, backRef: HTMLElement) => {
   console.log('⚡ Legacy function redirecting to DIRECT Canvas generation...');
   
-  // Extract basic data and use direct generation
   return generatePostcardCanvasDirectly({
     backgroundImageUrl: 'https://images.pexels.com/photos/457882/pexels-photo-457882.jpeg?auto=compress&cs=tinysrgb&w=800',
     frontText: 'Pozdrav iz prekrasnog mjesta!',
@@ -354,17 +343,11 @@ export const sendEmail = async (formData: EmailData): Promise<void> => {
   console.log('Sending contact email with data:', formData);
   
   try {
-    // Check deployment environment
     const isNetlifyProduction = window.location.hostname.includes('netlify.app') || 
                                window.location.hostname.includes('netlify.com') ||
                                window.location.hostname === 'postretro.netlify.app';
     
-    console.log('Environment check - isNetlifyProduction:', isNetlifyProduction);
-    
     if (isNetlifyProduction) {
-      console.log('Using Netlify Forms for contact email');
-      
-      // Netlify Forms submission
       const response = await fetch("/", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -374,24 +357,17 @@ export const sendEmail = async (formData: EmailData): Promise<void> => {
         })
       });
 
-      console.log('Netlify Forms response status:', response.status);
-
       if (response.ok) {
         console.log('Netlify contact email sent successfully');
         return;
       } else {
-        const errorText = await response.text();
-        console.error('Netlify Forms error:', errorText);
         throw new Error('Netlify form submission failed');
       }
     } else {
-      console.log('Local development - using FormSubmit directly');
       throw new Error('Using FormSubmit for local development');
     }
     
   } catch (error) {
-    console.log('Primary email service failed, using FormSubmit backup');
-    
     try {
       const formSubmitResponse = await fetch('https://formsubmit.co/jimgitara@gmail.com', {
         method: 'POST',
@@ -411,32 +387,20 @@ export const sendEmail = async (formData: EmailData): Promise<void> => {
         })
       });
 
-      console.log('FormSubmit response status:', formSubmitResponse.status);
-
       if (formSubmitResponse.ok) {
         console.log('FormSubmit contact email backup successful');
         return;
       } else {
-        const errorText = await formSubmitResponse.text();
-        console.error('FormSubmit error:', errorText);
         throw new Error('FormSubmit service failed');
       }
     } catch (backupError) {
-      console.error('All contact email services failed:', backupError);
       throw new Error('Sve email usluge su neuspješne. Molimo pokušajte ponovno.');
     }
   }
 };
 
 export const sendPostcard = async (postcardData: PostcardEmailData): Promise<void> => {
-  console.log('📧 Starting postcard send with GUARANTEED IMAGES...');
-  console.log('📋 Postcard data:', {
-    recipientEmail: postcardData.recipientEmail,
-    recipientName: postcardData.recipientName,
-    senderName: postcardData.senderName,
-    messageLength: postcardData.message?.length || 0,
-    hasImages: !!(postcardData.frontImageData && postcardData.backImageData)
-  });
+  console.log('📧 Starting postcard send with PROPER BACKEND...');
   
   // Validate required fields
   if (!postcardData.recipientEmail || !postcardData.senderName) {
@@ -448,93 +412,56 @@ export const sendPostcard = async (postcardData: PostcardEmailData): Promise<voi
   if (!emailRegex.test(postcardData.recipientEmail)) {
     throw new Error('Neispravna email adresa primatelja');
   }
+
+  // Validate that we have image data
+  if (!postcardData.frontImageData || !postcardData.backImageData) {
+    throw new Error('Nedostaju slike razglednice');
+  }
   
   try {
-    // Check deployment environment
+    // Check if we're on Netlify (has edge functions)
     const isNetlifyProduction = window.location.hostname.includes('netlify.app') || 
                                window.location.hostname.includes('netlify.com') ||
                                window.location.hostname === 'postretro.netlify.app';
     
-    console.log('Environment check - isNetlifyProduction:', isNetlifyProduction);
-    
     if (isNetlifyProduction) {
-      console.log('📧 Using Netlify Forms for postcard email');
+      console.log('📧 Using Netlify Edge Function for postcard with images');
       
-      // Create formatted message for Netlify Forms
-      const formattedMessage = `
-🌟 DIGITALNA RAZGLEDNICA 🌟
-
-Pozdrav ${postcardData.recipientName}!
-
-Dobili ste prekrasnu digitalnu razglednicu od ${postcardData.senderName}:
-
-💌 PORUKA:
-"${postcardData.message}"
-
-- ${postcardData.senderName}
-
----
-✨ Poslano s ljubavlju putem RetroPost
-🌐 https://postretro.netlify.app
-
-Hvala što koristite RetroPost za dijeljenje posebnih trenutaka!
-      `;
-      
-      // Netlify Forms submission for postcard
-      const response = await fetch("/", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: encode({
-          "form-name": "postcard",
-          "sender_name": postcardData.senderName,
-          "recipient_name": postcardData.recipientName,
-          "recipient_email": postcardData.recipientEmail,
-          "message": postcardData.message,
-          "formatted_message": formattedMessage
+      // Use Netlify Edge Function
+      const response = await fetch('/.netlify/functions/send-postcard', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          recipientEmail: postcardData.recipientEmail,
+          recipientName: postcardData.recipientName || 'Dragi prijatelj',
+          senderName: postcardData.senderName,
+          message: postcardData.message || 'Pozdrav iz prekrasnog mjesta!',
+          frontImageData: postcardData.frontImageData,
+          backImageData: postcardData.backImageData
         })
       });
 
-      console.log('📧 Netlify Forms response status:', response.status);
-
       if (response.ok) {
-        console.log('✅ Netlify postcard email sent successfully');
+        const result = await response.json();
+        console.log('✅ Netlify Edge Function success:', result);
         return;
       } else {
-        const errorText = await response.text();
-        console.error('❌ Netlify Forms error:', errorText);
-        throw new Error('Netlify postcard form submission failed');
+        const error = await response.json();
+        console.error('❌ Netlify Edge Function error:', error);
+        throw new Error(error.error || 'Netlify function failed');
       }
     } else {
-      console.log('🏠 Local development - using FormSubmit directly');
+      console.log('🏠 Local development - using direct FormSubmit');
       throw new Error('Using FormSubmit for local development');
     }
     
   } catch (error) {
-    console.log('📧 Primary postcard service failed, using FormSubmit with GUARANTEED IMAGES');
+    console.log('📧 Backend failed, using FormSubmit with embedded images');
     
     try {
-      // Convert base64 images to smaller format for email compatibility
-      const processImageForEmail = (base64Data: string): string => {
-        if (!base64Data) return '';
-        
-        // Create a smaller version for email
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d')!;
-        const img = new Image();
-        
-        return new Promise<string>((resolve) => {
-          img.onload = () => {
-            // Resize to smaller dimensions for email
-            canvas.width = 400;
-            canvas.height = 267;
-            ctx.drawImage(img, 0, 0, 400, 267);
-            resolve(canvas.toDataURL('image/jpeg', 0.7));
-          };
-          img.src = base64Data;
-        }) as any;
-      };
-
-      // Create beautiful HTML email with properly embedded images
+      // Create HTML email with embedded base64 images
       const htmlContent = `
         <!DOCTYPE html>
         <html>
@@ -639,15 +566,6 @@ Hvala što koristite RetroPost za dijeljenje posebnih trenutaka!
             .emoji {
               font-size: 24px;
             }
-            .image-note {
-              background: #fff3cd;
-              border: 1px solid #ffeaa7;
-              border-radius: 10px;
-              padding: 15px;
-              margin: 20px 0;
-              color: #856404;
-              text-align: center;
-            }
           </style>
         </head>
         <body>
@@ -660,23 +578,17 @@ Hvala što koristite RetroPost za dijeljenje posebnih trenutaka!
             
             <div class="content">
               <div class="greeting">
-                Pozdrav <strong>${postcardData.recipientName}</strong>! 👋
+                Pozdrav <strong>${postcardData.recipientName || 'dragi prijatelj'}</strong>! 👋
               </div>
               
               <p>Dobili ste prekrasnu digitalnu razglednicu od <strong>${postcardData.senderName}</strong>:</p>
               
               <div class="postcard-container">
                 <div class="postcard-title">🖼️ Prednja strana razglednice:</div>
-                ${postcardData.frontImageData ? 
-                  `<img src="${postcardData.frontImageData}" alt="Prednja strana razglednice" class="postcard-image" width="400" height="267">` : 
-                  '<div class="image-note">📷 Slika razglednice će biti priložena kao zasebna datoteka</div>'
-                }
+                <img src="${postcardData.frontImageData}" alt="Prednja strana razglednice" class="postcard-image">
                 
                 <div class="postcard-title">📝 Stražnja strana razglednice:</div>
-                ${postcardData.backImageData ? 
-                  `<img src="${postcardData.backImageData}" alt="Stražnja strana razglednice" class="postcard-image" width="400" height="267">` : 
-                  '<div class="image-note">📷 Slika razglednice će biti priložena kao zasebna datoteka</div>'
-                }
+                <img src="${postcardData.backImageData}" alt="Stražnja strana razglednice" class="postcard-image">
               </div>
               
               <div class="message-box">
@@ -693,67 +605,26 @@ Hvala što koristite RetroPost za dijeljenje posebnih trenutaka!
             <div class="footer">
               <p><strong>Poslano putem RetroPost - Digitalne razglednice</strong></p>
               <p><a href="https://postretro.netlify.app">🌐 https://postretro.netlify.app</a></p>
-              <p style="margin-top: 15px; font-size: 12px; color: #999;">
-                RetroPost omogućuje vam da stvorite i pošaljete personalizirane digitalne razglednice svojim najdražima.
-              </p>
             </div>
           </div>
         </body>
         </html>
       `;
       
-      // Enhanced FormSubmit payload with proper image handling
+      // Send via FormSubmit with embedded images
       const formSubmitPayload = {
-        _subject: `🌟 Nova razglednica od ${postcardData.senderName} za ${postcardData.recipientName}`,
+        _subject: `🌟 Nova razglednica od ${postcardData.senderName}`,
         _template: 'box',
         _captcha: 'false',
         _next: window.location.origin,
-        _cc: postcardData.recipientEmail, // Send copy to recipient
-        _autoresponse: `Hvala što ste poslali razglednicu putem RetroPost! Vaša razglednica je dostavljena na ${postcardData.recipientEmail}.`,
-        
-        // Main content
-        sender_name: postcardData.senderName,
-        recipient_name: postcardData.recipientName,
-        recipient_email: postcardData.recipientEmail,
-        postcard_message: postcardData.message,
-        
-        // HTML email content with embedded images
+        _cc: postcardData.recipientEmail,
         _html: htmlContent,
-        
-        // Attachment fields for images (FormSubmit specific)
-        _attachment: postcardData.frontImageData ? 'front-postcard.jpg' : '',
-        _attachment2: postcardData.backImageData ? 'back-postcard.jpg' : '',
-        
-        // Image data as separate fields
-        front_image_data: postcardData.frontImageData || '',
-        back_image_data: postcardData.backImageData || '',
-        
-        // Plain text version
-        message: `
-🌟 DIGITALNA RAZGLEDNICA 🌟
-
-Pozdrav ${postcardData.recipientName}!
-
-Dobili ste prekrasnu digitalnu razglednicu od ${postcardData.senderName}:
-
-💌 PORUKA:
-"${postcardData.message}"
-
-- ${postcardData.senderName}
-
----
-✨ Poslano s ljubavlju putem RetroPost
-🌐 https://postretro.netlify.app
-
-📷 Razglednica uključuje dvije slike:
-- Prednja strana s prekrasnim motivom
-- Stražnja strana s vašom porukom
-
-Hvala što koristite RetroPost za dijeljenje posebnih trenutaka!
-        `
+        sender_name: postcardData.senderName,
+        recipient_name: postcardData.recipientName || 'Dragi prijatelj',
+        recipient_email: postcardData.recipientEmail,
+        message: postcardData.message,
+        postcard_type: 'Digital Postcard with Embedded Images'
       };
-      
-      console.log('📤 Sending to FormSubmit with GUARANTEED image inclusion...');
       
       const formSubmitResponse = await fetch('https://formsubmit.co/jimgitara@gmail.com', {
         method: 'POST',
@@ -764,10 +635,8 @@ Hvala što koristite RetroPost za dijeljenje posebnih trenutaka!
         body: JSON.stringify(formSubmitPayload)
       });
 
-      console.log('📤 FormSubmit response status:', formSubmitResponse.status);
-      
       if (formSubmitResponse.ok) {
-        console.log('✅ FormSubmit postcard with GUARANTEED images sent successfully');
+        console.log('✅ FormSubmit with embedded images successful');
         return;
       } else {
         const errorText = await formSubmitResponse.text();
@@ -775,8 +644,8 @@ Hvala što koristite RetroPost za dijeljenje posebnih trenutaka!
         throw new Error('FormSubmit service failed');
       }
     } catch (backupError) {
-      console.error('❌ All postcard email services failed:', backupError);
-      throw new Error('Email servis trenutno nije dostupan. Vaša razglednica je kreirana, ali email nije poslan. Molimo kontaktirajte podršku na jimgitara@gmail.com');
+      console.error('❌ All postcard services failed:', backupError);
+      throw new Error('Email servis trenutno nije dostupan. Molimo kontaktirajte podršku na jimgitara@gmail.com');
     }
   }
 };
@@ -787,6 +656,6 @@ export const initEmailJS = () => {
     emailjs.init(EMAILJS_CONFIG.publicKey);
     console.log('EmailJS initialized');
   } else {
-    console.log('EmailJS not configured - using Netlify Forms and FormSubmit');
+    console.log('EmailJS not configured - using Netlify Edge Functions and FormSubmit');
   }
 };
