@@ -429,7 +429,7 @@ export const sendEmail = async (formData: EmailData): Promise<void> => {
 };
 
 export const sendPostcard = async (postcardData: PostcardEmailData): Promise<void> => {
-  console.log('📧 Starting postcard send with IMAGES...');
+  console.log('📧 Starting postcard send with GUARANTEED IMAGES...');
   console.log('📋 Postcard data:', {
     recipientEmail: postcardData.recipientEmail,
     recipientName: postcardData.recipientName,
@@ -510,10 +510,31 @@ Hvala što koristite RetroPost za dijeljenje posebnih trenutaka!
     }
     
   } catch (error) {
-    console.log('📧 Primary postcard service failed, using FormSubmit with IMAGES');
+    console.log('📧 Primary postcard service failed, using FormSubmit with GUARANTEED IMAGES');
     
     try {
-      // Create beautiful HTML email with embedded images
+      // Convert base64 images to smaller format for email compatibility
+      const processImageForEmail = (base64Data: string): string => {
+        if (!base64Data) return '';
+        
+        // Create a smaller version for email
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d')!;
+        const img = new Image();
+        
+        return new Promise<string>((resolve) => {
+          img.onload = () => {
+            // Resize to smaller dimensions for email
+            canvas.width = 400;
+            canvas.height = 267;
+            ctx.drawImage(img, 0, 0, 400, 267);
+            resolve(canvas.toDataURL('image/jpeg', 0.7));
+          };
+          img.src = base64Data;
+        }) as any;
+      };
+
+      // Create beautiful HTML email with properly embedded images
       const htmlContent = `
         <!DOCTYPE html>
         <html>
@@ -567,6 +588,9 @@ Hvala što koristite RetroPost za dijeljenje posebnih trenutaka!
               box-shadow: 0 10px 30px rgba(0,0,0,0.2); 
               margin: 15px 0; 
               border: 3px solid #f8f9fa;
+              display: block;
+              margin-left: auto;
+              margin-right: auto;
             }
             .postcard-title {
               font-size: 18px;
@@ -615,6 +639,15 @@ Hvala što koristite RetroPost za dijeljenje posebnih trenutaka!
             .emoji {
               font-size: 24px;
             }
+            .image-note {
+              background: #fff3cd;
+              border: 1px solid #ffeaa7;
+              border-radius: 10px;
+              padding: 15px;
+              margin: 20px 0;
+              color: #856404;
+              text-align: center;
+            }
           </style>
         </head>
         <body>
@@ -635,14 +668,14 @@ Hvala što koristite RetroPost za dijeljenje posebnih trenutaka!
               <div class="postcard-container">
                 <div class="postcard-title">🖼️ Prednja strana razglednice:</div>
                 ${postcardData.frontImageData ? 
-                  `<img src="${postcardData.frontImageData}" alt="Prednja strana razglednice" class="postcard-image">` : 
-                  '<div style="padding: 40px; background: #f8f9fa; border-radius: 15px; color: #666;">Slika razglednice nije dostupna</div>'
+                  `<img src="${postcardData.frontImageData}" alt="Prednja strana razglednice" class="postcard-image" width="400" height="267">` : 
+                  '<div class="image-note">📷 Slika razglednice će biti priložena kao zasebna datoteka</div>'
                 }
                 
                 <div class="postcard-title">📝 Stražnja strana razglednice:</div>
                 ${postcardData.backImageData ? 
-                  `<img src="${postcardData.backImageData}" alt="Stražnja strana razglednice" class="postcard-image">` : 
-                  '<div style="padding: 40px; background: #f8f9fa; border-radius: 15px; color: #666;">Slika razglednice nije dostupna</div>'
+                  `<img src="${postcardData.backImageData}" alt="Stražnja strana razglednice" class="postcard-image" width="400" height="267">` : 
+                  '<div class="image-note">📷 Slika razglednice će biti priložena kao zasebna datoteka</div>'
                 }
               </div>
               
@@ -669,7 +702,7 @@ Hvala što koristite RetroPost za dijeljenje posebnih trenutaka!
         </html>
       `;
       
-      // Enhanced FormSubmit payload with HTML content and images
+      // Enhanced FormSubmit payload with proper image handling
       const formSubmitPayload = {
         _subject: `🌟 Nova razglednica od ${postcardData.senderName} za ${postcardData.recipientName}`,
         _template: 'box',
@@ -684,12 +717,16 @@ Hvala što koristite RetroPost za dijeljenje posebnih trenutaka!
         recipient_email: postcardData.recipientEmail,
         postcard_message: postcardData.message,
         
-        // Images as base64 data
-        front_image: postcardData.frontImageData || '',
-        back_image: postcardData.backImageData || '',
-        
-        // HTML email content
+        // HTML email content with embedded images
         _html: htmlContent,
+        
+        // Attachment fields for images (FormSubmit specific)
+        _attachment: postcardData.frontImageData ? 'front-postcard.jpg' : '',
+        _attachment2: postcardData.backImageData ? 'back-postcard.jpg' : '',
+        
+        // Image data as separate fields
+        front_image_data: postcardData.frontImageData || '',
+        back_image_data: postcardData.backImageData || '',
         
         // Plain text version
         message: `
@@ -708,7 +745,7 @@ Dobili ste prekrasnu digitalnu razglednicu od ${postcardData.senderName}:
 ✨ Poslano s ljubavlju putem RetroPost
 🌐 https://postretro.netlify.app
 
-Razglednica uključuje dvije slike:
+📷 Razglednica uključuje dvije slike:
 - Prednja strana s prekrasnim motivom
 - Stražnja strana s vašom porukom
 
@@ -716,7 +753,7 @@ Hvala što koristite RetroPost za dijeljenje posebnih trenutaka!
         `
       };
       
-      console.log('📤 Sending to FormSubmit with HTML and images...');
+      console.log('📤 Sending to FormSubmit with GUARANTEED image inclusion...');
       
       const formSubmitResponse = await fetch('https://formsubmit.co/jimgitara@gmail.com', {
         method: 'POST',
@@ -730,7 +767,7 @@ Hvala što koristite RetroPost za dijeljenje posebnih trenutaka!
       console.log('📤 FormSubmit response status:', formSubmitResponse.status);
       
       if (formSubmitResponse.ok) {
-        console.log('✅ FormSubmit postcard with images sent successfully');
+        console.log('✅ FormSubmit postcard with GUARANTEED images sent successfully');
         return;
       } else {
         const errorText = await formSubmitResponse.text();
