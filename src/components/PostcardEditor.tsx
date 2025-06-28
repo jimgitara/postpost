@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Type, Palette, Send, Download, Calendar, FileSignature as Signature, RotateCcw, Save, AlertCircle, CheckCircle, Clock, Zap } from 'lucide-react';
 import { PostcardTemplate, PostcardCustomization } from '../types';
-import { sendPostcard, capturePostcardImages } from '../services/emailService';
+import { sendPostcard, generatePostcardCanvasDirectly } from '../services/emailService';
 
 interface PostcardEditorProps {
   template: PostcardTemplate;
@@ -31,12 +31,11 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
     senderName: '',
   });
 
-  // Check if refs are ready - always true now since we don't depend on html2canvas
+  // Always ready - no DOM dependency!
   const refsReady = true;
 
-  // Quick setup
   useEffect(() => {
-    console.log('PostcardEditor ready - using Canvas API directly');
+    console.log('PostcardEditor ready - using DIRECT Canvas API');
   }, []);
 
   const fonts = [
@@ -97,19 +96,25 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
   };
 
   const handleDownload = async () => {
-    console.log('🚀 Starting INSTANT download...');
+    console.log('🚀 Starting INSTANT download with DIRECT Canvas API...');
     
-    if (!frontRef.current || !backRef.current) {
-      setSendError('Razglednica se još učitava. Molimo pričekajte trenutak i pokušajte ponovno.');
-      return;
-    }
-
     try {
       setSendError(null);
       setIsCapturing(true);
       
-      // Use our new Canvas API method - INSTANT!
-      const { frontImage, backImage } = await capturePostcardImages(frontRef.current, backRef.current);
+      // Use DIRECT Canvas generation - NO DOM dependency!
+      const { frontImage, backImage } = await generatePostcardCanvasDirectly({
+        backgroundImageUrl: template.image,
+        frontText: customization.frontText,
+        textColor: customization.frontTextColor,
+        fontSize: customization.frontTextSize,
+        fontFamily: customization.frontTextFont,
+        message: customization.message || 'Vaša poruka ovdje...',
+        signature: customization.signature,
+        recipientName: customization.recipientName || 'Ime primatelja',
+        recipientEmail: customization.recipientEmail || 'email@primjer.com',
+        senderName: customization.senderName || 'Vaše ime'
+      });
       
       // Download front
       const frontLink = document.createElement('a');
@@ -142,11 +147,6 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
       return;
     }
     
-    if (!frontRef.current || !backRef.current) {
-      setSendError('Razglednica se još učitava. Molimo pričekajte trenutak.');
-      return;
-    }
-    
     setIsSending(true);
     setIsCapturing(true);
     setSendError(null);
@@ -154,10 +154,22 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
     console.log('⚡ Starting INSTANT postcard send...');
     
     try {
-      // INSTANT Canvas generation - no waiting!
-      console.log('🎨 Starting INSTANT Canvas generation...');
+      // INSTANT Canvas generation - NO DOM dependency!
+      console.log('🎨 Starting DIRECT Canvas generation...');
       
-      const { frontImage, backImage } = await capturePostcardImages(frontRef.current, backRef.current);
+      const { frontImage, backImage } = await generatePostcardCanvasDirectly({
+        backgroundImageUrl: template.image,
+        frontText: customization.frontText,
+        textColor: customization.frontTextColor,
+        fontSize: customization.frontTextSize,
+        fontFamily: customization.frontTextFont,
+        message: customization.message || 'Vaša poruka ovdje...',
+        signature: customization.signature,
+        recipientName: customization.recipientName || 'Ime primatelja',
+        recipientEmail: customization.recipientEmail,
+        senderName: customization.senderName
+      });
+      
       console.log('✅ Images generated instantly, sending email...');
       
       setIsCapturing(false);
@@ -400,12 +412,12 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
             {isCapturing ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
-                <span>Priprema...</span>
+                <span>⚡ Instant...</span>
               </>
             ) : (
               <>
                 <Download className="h-4 w-4" />
-                <span>Preuzmi</span>
+                <span>⚡ Instant preuzmi</span>
               </>
             )}
           </button>
@@ -482,7 +494,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
           <div className="bg-green-50 border border-green-200 rounded-xl p-4">
             <div className="flex items-center space-x-2 text-green-800">
               <CheckCircle className="h-5 w-5" />
-              <span className="font-medium">Razglednica je uspješno poslana!</span>
+              <span className="font-medium">✅ Razglednica je uspješno poslana!</span>
             </div>
             <p className="text-green-600 text-sm mt-1">
               Primatelj će uskoro dobiti vašu prekrasnu razglednicu na email adresi {customization.recipientEmail}
@@ -506,7 +518,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
             <div className="flex items-center space-x-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              <span className="text-blue-800 font-medium">⚡ Instant kreiranje razglednice...</span>
+              <span className="text-blue-800 font-medium">⚡ INSTANT kreiranje razglednice...</span>
             </div>
             <p className="text-blue-600 text-sm mt-1">
               Canvas API - bez čekanja!
@@ -594,7 +606,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
             {isSending ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>{isCapturing ? 'Kreira...' : 'Šalje se...'}</span>
+                <span>{isCapturing ? '⚡ Kreira...' : 'Šalje se...'}</span>
               </>
             ) : sendSuccess ? (
               <>
@@ -647,7 +659,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
           </div>
 
           <div className="text-sm text-gray-500">
-            Korak {['customize', 'message', 'send'].indexOf(step) + 1} od 3
+            ⚡ Canvas API - Instant
           </div>
         </div>
 

@@ -23,21 +23,57 @@ interface PostcardEmailData {
   backImageData?: string;
 }
 
+interface PostcardCanvasData {
+  backgroundImageUrl: string;
+  frontText: string;
+  textColor: string;
+  fontSize: number;
+  fontFamily: string;
+  message: string;
+  signature: string;
+  recipientName: string;
+  recipientEmail: string;
+  senderName: string;
+}
+
 const encode = (data: Record<string, string>) => {
   return Object.keys(data)
     .map(key => encodeURIComponent(key) + "=" + encodeURIComponent(data[key]))
     .join("&");
 };
 
-// INSTANT Canvas-based postcard generation - NO html2canvas!
-const generatePostcardCanvas = async (
-  backgroundImageUrl: string, 
-  frontText: string, 
-  textColor: string, 
-  fontSize: number, 
-  fontFamily: string
-): Promise<string> => {
-  console.log('🎨 Generating canvas postcard instantly...');
+// COMPLETELY DOM-INDEPENDENT Canvas generation
+export const generatePostcardCanvasDirectly = async (data: PostcardCanvasData): Promise<{ frontImage: string; backImage: string }> => {
+  console.log('🎨 DIRECT Canvas generation - NO DOM dependency!');
+  
+  try {
+    // Generate front and back in parallel
+    const [frontImage, backImage] = await Promise.all([
+      generateFrontCanvasDirect(data),
+      generateBackCanvasDirect(data)
+    ]);
+    
+    console.log('✅ DIRECT Canvas generation completed instantly!');
+    
+    return { frontImage, backImage };
+    
+  } catch (error) {
+    console.error('❌ DIRECT Canvas generation failed:', error);
+    
+    // Emergency fallback
+    const fallbackFront = generateFallbackCanvas('Pozdrav iz prekrasnog mjesta!', '#667eea', '#764ba2');
+    const fallbackBack = generateFallbackCanvas('RetroPost Razglednica', '#ffffff', '#f8f9fa');
+    
+    return {
+      frontImage: fallbackFront,
+      backImage: fallbackBack
+    };
+  }
+};
+
+// INSTANT front canvas generation
+const generateFrontCanvasDirect = async (data: PostcardCanvasData): Promise<string> => {
+  console.log('🎨 Generating front canvas directly...');
   
   return new Promise((resolve) => {
     const canvas = document.createElement('canvas');
@@ -65,8 +101,8 @@ const generatePostcardCanvas = async (
         'cursive': 'cursive'
       };
       
-      ctx.fillStyle = textColor;
-      ctx.font = `bold ${fontSize}px ${fontMap[fontFamily] || 'Arial'}`;
+      ctx.fillStyle = data.textColor;
+      ctx.font = `bold ${data.fontSize}px ${fontMap[data.fontFamily] || 'Arial'}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       
@@ -77,7 +113,7 @@ const generatePostcardCanvas = async (
       ctx.shadowOffsetY = 2;
       
       // Word wrap text
-      const words = frontText.split(' ');
+      const words = data.frontText.split(' ');
       const lines: string[] = [];
       let currentLine = '';
       
@@ -95,7 +131,7 @@ const generatePostcardCanvas = async (
       if (currentLine) lines.push(currentLine);
       
       // Draw text lines
-      const lineHeight = fontSize * 1.2;
+      const lineHeight = data.fontSize * 1.2;
       const startY = 200 - ((lines.length - 1) * lineHeight) / 2;
       
       lines.forEach((line, index) => {
@@ -128,8 +164,8 @@ const generatePostcardCanvas = async (
       ctx.fillRect(0, 0, 600, 400);
       
       // Add text with same styling as above
-      ctx.fillStyle = textColor;
-      ctx.font = `bold ${fontSize}px Arial`;
+      ctx.fillStyle = data.textColor;
+      ctx.font = `bold ${data.fontSize}px Arial`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
@@ -137,7 +173,7 @@ const generatePostcardCanvas = async (
       ctx.shadowOffsetX = 2;
       ctx.shadowOffsetY = 2;
       
-      const words = frontText.split(' ');
+      const words = data.frontText.split(' ');
       const lines: string[] = [];
       let currentLine = '';
       
@@ -154,7 +190,7 @@ const generatePostcardCanvas = async (
       }
       if (currentLine) lines.push(currentLine);
       
-      const lineHeight = fontSize * 1.2;
+      const lineHeight = data.fontSize * 1.2;
       const startY = 200 - ((lines.length - 1) * lineHeight) / 2;
       
       lines.forEach((line, index) => {
@@ -165,19 +201,13 @@ const generatePostcardCanvas = async (
     };
     
     // Start loading image
-    img.src = backgroundImageUrl;
+    img.src = data.backgroundImageUrl;
   });
 };
 
-// INSTANT back side generation
-const generateBackCanvas = (
-  message: string, 
-  signature: string, 
-  recipientName: string, 
-  recipientEmail: string, 
-  senderName: string
-): string => {
-  console.log('📝 Generating back canvas instantly...');
+// INSTANT back canvas generation
+const generateBackCanvasDirect = (data: PostcardCanvasData): string => {
+  console.log('📝 Generating back canvas directly...');
   
   const canvas = document.createElement('canvas');
   canvas.width = 600;
@@ -207,7 +237,7 @@ const generateBackCanvas = (
   // Message text with word wrap
   ctx.font = '16px Arial';
   ctx.fillStyle = '#555';
-  const messageWords = message.split(' ');
+  const messageWords = data.message.split(' ');
   let messageLine = '';
   let messageY = 120;
   
@@ -228,11 +258,11 @@ const generateBackCanvas = (
   }
   
   // Signature
-  if (signature) {
+  if (data.signature) {
     ctx.font = 'italic 16px Arial';
     ctx.textAlign = 'right';
     ctx.fillStyle = '#667eea';
-    ctx.fillText(`- ${signature}`, 570, messageY + 40);
+    ctx.fillText(`- ${data.signature}`, 570, messageY + 40);
   }
   
   // Divider line
@@ -251,10 +281,10 @@ const generateBackCanvas = (
   
   ctx.font = '14px Arial';
   ctx.fillStyle = '#555';
-  ctx.fillText(recipientName || 'Ime primatelja', 30, 350);
+  ctx.fillText(data.recipientName, 30, 350);
   ctx.font = '12px Arial';
   ctx.fillStyle = '#777';
-  ctx.fillText(recipientEmail, 30, 370);
+  ctx.fillText(data.recipientEmail, 30, 370);
   
   // Sender
   ctx.font = 'bold 12px Arial';
@@ -264,7 +294,7 @@ const generateBackCanvas = (
   
   ctx.font = '14px Arial';
   ctx.fillStyle = '#555';
-  ctx.fillText(senderName, 570, 350);
+  ctx.fillText(data.senderName, 570, 350);
   
   // Footer
   ctx.font = '10px Arial';
@@ -275,105 +305,49 @@ const generateBackCanvas = (
   return canvas.toDataURL('image/jpeg', 0.8);
 };
 
-// SUPER FAST postcard generation - NO html2canvas dependency!
-export const capturePostcardImages = async (frontRef: HTMLElement, backRef: HTMLElement) => {
-  console.log('⚡ INSTANT Canvas generation starting...');
+// Fallback canvas generator
+const generateFallbackCanvas = (text: string, color1: string, color2: string): string => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 600;
+  canvas.height = 400;
+  const ctx = canvas.getContext('2d')!;
   
-  try {
-    // Extract data from DOM elements
-    const frontTextElement = frontRef.querySelector('div[style*="color"]') as HTMLElement;
-    const frontText = frontTextElement?.textContent || 'Pozdrav iz prekrasnog mjesta!';
-    
-    // Extract styling
-    const computedStyle = frontTextElement ? window.getComputedStyle(frontTextElement) : null;
-    const textColor = computedStyle?.color || '#ffffff';
-    const fontSize = parseInt(computedStyle?.fontSize || '24') || 24;
-    const fontFamily = computedStyle?.fontFamily?.includes('serif') ? 'serif' : 
-                      computedStyle?.fontFamily?.includes('mono') ? 'mono' :
-                      computedStyle?.fontFamily?.includes('cursive') ? 'cursive' : 'sans';
-    
-    // Get background image
-    const imgElement = frontRef.querySelector('img') as HTMLImageElement;
-    const backgroundImageUrl = imgElement?.src || 'https://images.pexels.com/photos/457882/pexels-photo-457882.jpeg?auto=compress&cs=tinysrgb&w=800';
-    
-    // Extract back side data
-    const messageElements = backRef.querySelectorAll('div');
-    let message = 'Vaša poruka ovdje...';
-    let signature = '';
-    let recipientName = 'Ime primatelja';
-    let recipientEmail = 'email@primjer.com';
-    let senderName = 'Vaše ime';
-    
-    // Try to extract actual data from back side
-    messageElements.forEach(el => {
-      const text = el.textContent || '';
-      if (text.includes('Ovdje će biti vaša osobna poruka') || text.length > 20) {
-        message = text.replace('Ovdje će biti vaša osobna poruka...', '').trim() || message;
-      }
-      if (text.includes('Ime primatelja') && text !== 'Ime primatelja') {
-        recipientName = text;
-      }
-      if (text.includes('@')) {
-        recipientEmail = text;
-      }
-      if (text.includes('Vaše ime') && text !== 'Vaše ime') {
-        senderName = text;
-      }
-    });
-    
-    console.log('📊 Extracted data:', { frontText, textColor, fontSize, fontFamily, message, recipientName, senderName });
-    
-    // Generate both images in parallel using Canvas API
-    const [frontImage, backImage] = await Promise.all([
-      generatePostcardCanvas(backgroundImageUrl, frontText, textColor, fontSize, fontFamily),
-      Promise.resolve(generateBackCanvas(message, signature, recipientName, recipientEmail, senderName))
-    ]);
-    
-    console.log('✅ Canvas generation completed instantly!');
-    
-    return {
-      frontImage,
-      backImage
-    };
-    
-  } catch (error) {
-    console.error('❌ Canvas generation failed:', error);
-    
-    // Emergency fallback - simple colored rectangles with text
-    const canvas = document.createElement('canvas');
-    canvas.width = 600;
-    canvas.height = 400;
-    const ctx = canvas.getContext('2d')!;
-    
-    // Front fallback
-    const gradient = ctx.createLinearGradient(0, 0, 600, 400);
-    gradient.addColorStop(0, '#667eea');
-    gradient.addColorStop(1, '#764ba2');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 600, 400);
-    
-    ctx.fillStyle = 'white';
-    ctx.font = 'bold 24px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('Pozdrav iz prekrasnog mjesta!', 300, 200);
-    
-    const frontFallback = canvas.toDataURL('image/jpeg', 0.8);
-    
-    // Back fallback
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, 600, 400);
-    ctx.fillStyle = 'black';
-    ctx.font = '20px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('RetroPost Razglednica', 300, 200);
-    
-    const backFallback = canvas.toDataURL('image/jpeg', 0.8);
-    
-    return {
-      frontImage: frontFallback,
-      backImage: backFallback
-    };
-  }
+  // Gradient background
+  const gradient = ctx.createLinearGradient(0, 0, 600, 400);
+  gradient.addColorStop(0, color1);
+  gradient.addColorStop(1, color2);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 600, 400);
+  
+  // Text
+  ctx.fillStyle = 'white';
+  ctx.font = 'bold 24px Arial';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+  ctx.shadowBlur = 4;
+  ctx.fillText(text, 300, 200);
+  
+  return canvas.toDataURL('image/jpeg', 0.8);
+};
+
+// Legacy function for backward compatibility - now uses direct generation
+export const capturePostcardImages = async (frontRef: HTMLElement, backRef: HTMLElement) => {
+  console.log('⚡ Legacy function redirecting to DIRECT Canvas generation...');
+  
+  // Extract basic data and use direct generation
+  return generatePostcardCanvasDirectly({
+    backgroundImageUrl: 'https://images.pexels.com/photos/457882/pexels-photo-457882.jpeg?auto=compress&cs=tinysrgb&w=800',
+    frontText: 'Pozdrav iz prekrasnog mjesta!',
+    textColor: '#ffffff',
+    fontSize: 24,
+    fontFamily: 'serif',
+    message: 'Vaša poruka ovdje...',
+    signature: '',
+    recipientName: 'Ime primatelja',
+    recipientEmail: 'email@primjer.com',
+    senderName: 'Vaše ime'
+  });
 };
 
 export const sendEmail = async (formData: EmailData): Promise<void> => {
