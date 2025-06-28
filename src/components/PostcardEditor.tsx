@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ArrowLeft, Type, Palette, Send, Download, Calendar, FileSignature as Signature, RotateCcw, Save } from 'lucide-react';
 import { PostcardTemplate, PostcardCustomization } from '../types';
 import { sendPostcard, capturePostcardImages } from '../services/emailService';
@@ -16,6 +16,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
   const [autoSaved, setAutoSaved] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [refsReady, setRefsReady] = useState(false);
   const [customization, setCustomization] = useState<PostcardCustomization>({
     frontText: 'Pozdrav iz prekrasnog mjesta!',
     frontTextColor: '#ffffff',
@@ -27,6 +28,26 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
     recipientName: '',
     senderName: '',
   });
+
+  // Check if refs are ready
+  useEffect(() => {
+    const checkRefs = () => {
+      if (frontRef.current && backRef.current) {
+        setRefsReady(true);
+        console.log('Postcard refs are ready');
+      } else {
+        setRefsReady(false);
+        console.log('Postcard refs not ready yet');
+      }
+    };
+
+    checkRefs();
+    
+    // Check again after a short delay to ensure DOM is fully rendered
+    const timer = setTimeout(checkRefs, 100);
+    
+    return () => clearTimeout(timer);
+  }, [step, showBack]);
 
   const fonts = [
     { value: 'serif', label: 'Serif', className: 'font-serif' },
@@ -86,29 +107,33 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
 
   const handleDownload = async () => {
     console.log('Starting download...');
-    if (frontRef.current && backRef.current) {
-      try {
-        const { frontImage, backImage } = await capturePostcardImages(frontRef.current, backRef.current);
-        
-        // Download front
-        const frontLink = document.createElement('a');
-        frontLink.download = `razglednica-prednja-${template.name.toLowerCase().replace(/\s+/g, '-')}.png`;
-        frontLink.href = frontImage;
-        frontLink.click();
-        
-        // Download back
-        setTimeout(() => {
-          const backLink = document.createElement('a');
-          backLink.download = `razglednica-straznja-${template.name.toLowerCase().replace(/\s+/g, '-')}.png`;
-          backLink.href = backImage;
-          backLink.click();
-        }, 500);
-        
-        console.log('Download completed successfully');
-      } catch (error) {
-        console.error('Error downloading postcard:', error);
-        alert('Greška pri preuzimanju razglednice. Molimo pokušajte ponovno.');
-      }
+    
+    if (!refsReady || !frontRef.current || !backRef.current) {
+      alert('Razglednica se još učitava. Molimo pričekajte trenutak i pokušajte ponovno.');
+      return;
+    }
+
+    try {
+      const { frontImage, backImage } = await capturePostcardImages(frontRef.current, backRef.current);
+      
+      // Download front
+      const frontLink = document.createElement('a');
+      frontLink.download = `razglednica-prednja-${template.name.toLowerCase().replace(/\s+/g, '-')}.png`;
+      frontLink.href = frontImage;
+      frontLink.click();
+      
+      // Download back
+      setTimeout(() => {
+        const backLink = document.createElement('a');
+        backLink.download = `razglednica-straznja-${template.name.toLowerCase().replace(/\s+/g, '-')}.png`;
+        backLink.href = backImage;
+        backLink.click();
+      }, 500);
+      
+      console.log('Download completed successfully');
+    } catch (error) {
+      console.error('Error downloading postcard:', error);
+      alert('Greška pri preuzimanju razglednice. Molimo pokušajte ponovno.');
     }
   };
 
@@ -120,8 +145,9 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
       return;
     }
     
-    if (!frontRef.current || !backRef.current) {
-      setSendError('Greška: Razglednica nije spremna za slanje');
+    if (!refsReady || !frontRef.current || !backRef.current) {
+      setSendError('Razglednica se još učitava. Molimo pričekajte trenutak.');
+      console.log('Refs not ready:', { refsReady, frontRef: !!frontRef.current, backRef: !!backRef.current });
       return;
     }
     
@@ -182,6 +208,12 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
                 <span>Automatski spremljeno</span>
               </div>
             )}
+            {!refsReady && (
+              <div className="flex items-center space-x-2 text-orange-600 text-sm">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
+                <span>Učitava se...</span>
+              </div>
+            )}
             <button
               onClick={() => setShowBack(!showBack)}
               className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-all"
@@ -196,12 +228,20 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
         <div 
           ref={frontRef}
           className={`relative bg-white rounded-2xl shadow-2xl overflow-hidden aspect-[3/2] max-w-lg mx-auto transition-all duration-500 ${showBack ? 'hidden' : 'block'}`}
+          style={{ minHeight: '300px' }}
         >
           <img
             src={template.image}
             alt={template.name}
             className="w-full h-full object-cover"
             crossOrigin="anonymous"
+            onLoad={() => {
+              console.log('Front image loaded');
+              setTimeout(() => setRefsReady(true), 100);
+            }}
+            onError={(e) => {
+              console.error('Front image failed to load:', e);
+            }}
           />
           <div className="absolute inset-0 bg-black/20"></div>
           <div className="absolute inset-0 flex items-center justify-center p-8">
@@ -223,6 +263,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
         <div 
           ref={backRef}
           className={`bg-white rounded-2xl shadow-2xl aspect-[3/2] max-w-lg mx-auto p-6 flex flex-col transition-all duration-500 ${showBack ? 'block' : 'hidden'}`}
+          style={{ minHeight: '300px' }}
         >
           {/* Message Area */}
           <div className="flex-1 border-b-2 border-gray-200 pb-4 mb-4">
@@ -354,7 +395,8 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
         <div className="flex flex-col space-y-3 pt-4">
           <button
             onClick={handleDownload}
-            className="flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-all"
+            disabled={!refsReady}
+            className="flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download className="h-4 w-4" />
             <span>Preuzmi</span>
@@ -437,6 +479,23 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
           </div>
         )}
 
+        {/* Ready Status */}
+        <div className={`p-4 rounded-xl border ${refsReady ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200'}`}>
+          <div className="flex items-center space-x-2">
+            {refsReady ? (
+              <>
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-green-800 font-medium">Razglednica je spremna za slanje</span>
+              </>
+            ) : (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-orange-600"></div>
+                <span className="text-orange-800 font-medium">Priprema razglednice...</span>
+              </>
+            )}
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Ime primatelja *</label>
@@ -511,7 +570,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
           </button>
           <button
             onClick={handleSend}
-            disabled={!customization.recipientEmail || !customization.senderName || isSending}
+            disabled={!customization.recipientEmail || !customization.senderName || isSending || !refsReady}
             className="flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white py-3 rounded-xl font-semibold hover:from-primary-600 hover:to-secondary-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSending ? (
