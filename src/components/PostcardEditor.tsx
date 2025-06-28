@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Type, Palette, Send, Download, Calendar, FileSignature as Signature, RotateCcw, Save } from 'lucide-react';
+import { ArrowLeft, Type, Palette, Send, Download, Calendar, FileSignature as Signature, RotateCcw, Save, AlertCircle, CheckCircle } from 'lucide-react';
 import { PostcardTemplate, PostcardCustomization } from '../types';
 import { sendPostcard, capturePostcardImages } from '../services/emailService';
 
@@ -14,8 +14,9 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
   const [step, setStep] = useState<'customize' | 'message' | 'send'>('customize');
   const [showBack, setShowBack] = useState(false);
   const [autoSaved, setAutoSaved] = useState(false);
-  const [isSending, setIsSending] = useState(false);
+  const [isSending, setSending] = useState(false);
   const [sendError, setSendError] = useState<string | null>(null);
+  const [sendSuccess, setSendSuccess] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [customization, setCustomization] = useState<PostcardCustomization>({
     frontText: 'Pozdrav iz prekrasnog mjesta!',
@@ -29,16 +30,16 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
     senderName: '',
   });
 
-  // Quick refs check - don't wait for image loading
+  // Check if refs are ready
   const refsReady = frontRef.current && backRef.current;
 
-  // Check refs immediately when component mounts
+  // Quick refs check
   useEffect(() => {
     const timer = setTimeout(() => {
       if (frontRef.current && backRef.current) {
         console.log('Postcard refs are ready');
       }
-    }, 50); // Very short delay
+    }, 50);
     
     return () => clearTimeout(timer);
   }, [step]);
@@ -61,6 +62,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
     console.log('Updating customization:', updates);
     setCustomization(prev => ({ ...prev, ...updates }));
     setSendError(null);
+    setSendSuccess(false);
     
     // Auto-save simulation
     setTimeout(() => {
@@ -81,14 +83,14 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
         setSendError('Vaše ime je obavezno');
         return false;
       }
-      if (!customization.recipientEmail.includes('@') || !customization.recipientEmail.includes('.')) {
+      
+      // Enhanced email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(customization.recipientEmail)) {
         setSendError('Molimo unesite valjanu email adresu');
         return false;
       }
-      if (customization.recipientEmail.length < 5) {
-        setSendError('Email adresa je prekratka');
-        return false;
-      }
+      
       if (customization.senderName.length < 2) {
         setSendError('Ime mora imati najmanje 2 znaka');
         return false;
@@ -103,11 +105,12 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
     console.log('Starting download...');
     
     if (!frontRef.current || !backRef.current) {
-      alert('Razglednica se još učitava. Molimo pričekajte trenutak i pokušajte ponovno.');
+      setSendError('Razglednica se još učitava. Molimo pričekajte trenutak i pokušajte ponovno.');
       return;
     }
 
     try {
+      setSendError(null);
       const { frontImage, backImage } = await capturePostcardImages(frontRef.current, backRef.current);
       
       // Download front
@@ -127,7 +130,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
       console.log('Download completed successfully');
     } catch (error) {
       console.error('Error downloading postcard:', error);
-      alert('Greška pri preuzimanju razglednice. Molimo pokušajte ponovno.');
+      setSendError('Greška pri preuzimanju razglednice. Molimo pokušajte ponovno.');
     }
   };
 
@@ -144,8 +147,9 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
       return;
     }
     
-    setIsSending(true);
+    setSending(true);
     setSendError(null);
+    setSendSuccess(false);
     console.log('Starting to send postcard...');
     
     try {
@@ -165,17 +169,19 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
       });
       
       console.log('Postcard sent successfully');
-      alert(`✅ Razglednica je uspješno poslana!\n\n📧 Primatelj: ${customization.recipientEmail}\n👤 Od: ${customization.senderName}\n\nPrimatelj će uskoro dobiti vašu prekrasnu razglednicu u svom email sandučiću s priloženim slikama.`);
-      onBack();
+      setSendSuccess(true);
+      
+      // Show success message for 3 seconds then go back
+      setTimeout(() => {
+        onBack();
+      }, 3000);
+      
     } catch (error) {
       console.error('Error sending postcard:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Nepoznata greška';
+      const errorMessage = error instanceof Error ? error.message : 'Nepoznata greška pri slanju razglednice';
       setSendError(errorMessage);
-      
-      // Show user-friendly error message
-      alert(`❌ Greška pri slanju razglednice:\n\n${errorMessage}\n\nMolimo pokušajte ponovno ili kontaktirajte podršku.`);
     } finally {
-      setIsSending(false);
+      setSending(false);
     }
   };
 
@@ -228,7 +234,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
             }}
             onError={(e) => {
               console.error('Front image failed to load:', e);
-              setImageLoaded(true); // Still allow usage even if image fails
+              setImageLoaded(true);
             }}
           />
           <div className="absolute inset-0 bg-black/20"></div>
@@ -457,17 +463,31 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
       <h3 className="text-2xl font-semibold text-gray-900 text-center">Pošaljite razglednicu</h3>
       
       <div className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
+        {/* Success Message */}
+        {sendSuccess && (
+          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+            <div className="flex items-center space-x-2 text-green-800">
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-medium">Razglednica je uspješno poslana!</span>
+            </div>
+            <p className="text-green-600 text-sm mt-1">
+              Primatelj će uskoro dobiti vašu prekrasnu razglednicu na email adresi {customization.recipientEmail}
+            </p>
+          </div>
+        )}
+
         {/* Error Message */}
         {sendError && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-4">
             <div className="flex items-center space-x-2 text-red-800">
+              <AlertCircle className="h-5 w-5" />
               <span className="font-medium">Greška:</span>
             </div>
             <p className="text-red-600 text-sm mt-1">{sendError}</p>
           </div>
         )}
 
-        {/* Ready Status - Only show if not ready */}
+        {/* Ready Status */}
         {!refsReady && (
           <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
             <div className="flex items-center space-x-2">
@@ -534,10 +554,10 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
           <div className="flex items-center space-x-2 text-blue-800">
             <Calendar className="h-4 w-4" />
-            <span className="font-medium">Instant dostava putem emaila s priloženim slikama</span>
+            <span className="font-medium">Instant dostava putem emaila</span>
           </div>
           <p className="text-blue-600 text-sm mt-1">
-            Vaša razglednica će biti dostavljena odmah na email adresu primatelja kao prekrasno formatiran HTML email s priloženim slikama prednje i stražnje strane.
+            Vaša razglednica će biti dostavljena odmah kao prekrasno formatiran HTML email s priloženim slikama prednje i stražnje strane.
           </p>
         </div>
 
@@ -551,13 +571,18 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
           </button>
           <button
             onClick={handleSend}
-            disabled={!customization.recipientEmail || !customization.senderName || isSending || !refsReady}
+            disabled={!customization.recipientEmail || !customization.senderName || isSending || !refsReady || sendSuccess}
             className="flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white py-3 rounded-xl font-semibold hover:from-primary-600 hover:to-secondary-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSending ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                 <span>Šalje se...</span>
+              </>
+            ) : sendSuccess ? (
+              <>
+                <CheckCircle className="h-4 w-4" />
+                <span>Poslano!</span>
               </>
             ) : (
               <>
