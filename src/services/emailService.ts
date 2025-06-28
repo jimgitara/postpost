@@ -29,196 +29,349 @@ const encode = (data: Record<string, string>) => {
     .join("&");
 };
 
-// AGGRESSIVE timeout wrapper - max 3 seconds!
-const captureWithTimeout = async (element: HTMLElement, options: any, timeoutMs = 3000) => {
-  console.log(`⏱️ Starting capture with ${timeoutMs}ms timeout...`);
+// INSTANT Canvas-based postcard generation - NO html2canvas!
+const generatePostcardCanvas = async (
+  backgroundImageUrl: string, 
+  frontText: string, 
+  textColor: string, 
+  fontSize: number, 
+  fontFamily: string
+): Promise<string> => {
+  console.log('🎨 Generating canvas postcard instantly...');
   
-  return Promise.race([
-    import('html2canvas').then(async (module) => {
-      const html2canvas = module.default;
-      return html2canvas(element, options);
-    }),
-    new Promise((_, reject) => 
-      setTimeout(() => {
-        console.log('⏰ Capture timeout reached!');
-        reject(new Error('Capture timeout'));
-      }, timeoutMs)
-    )
-  ]) as Promise<HTMLCanvasElement>;
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 600;
+    canvas.height = 400;
+    const ctx = canvas.getContext('2d')!;
+    
+    // Create background image
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    
+    img.onload = () => {
+      // Draw background image
+      ctx.drawImage(img, 0, 0, 600, 400);
+      
+      // Add overlay for better text visibility
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.fillRect(0, 0, 600, 400);
+      
+      // Configure text
+      const fontMap: Record<string, string> = {
+        'serif': 'serif',
+        'sans': 'Arial, sans-serif',
+        'mono': 'Courier New, monospace',
+        'cursive': 'cursive'
+      };
+      
+      ctx.fillStyle = textColor;
+      ctx.font = `bold ${fontSize}px ${fontMap[fontFamily] || 'Arial'}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      
+      // Add text shadow for better visibility
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
+      
+      // Word wrap text
+      const words = frontText.split(' ');
+      const lines: string[] = [];
+      let currentLine = '';
+      
+      for (const word of words) {
+        const testLine = currentLine + (currentLine ? ' ' : '') + word;
+        const metrics = ctx.measureText(testLine);
+        
+        if (metrics.width > 500 && currentLine) {
+          lines.push(currentLine);
+          currentLine = word;
+        } else {
+          currentLine = testLine;
+        }
+      }
+      if (currentLine) lines.push(currentLine);
+      
+      // Draw text lines
+      const lineHeight = fontSize * 1.2;
+      const startY = 200 - ((lines.length - 1) * lineHeight) / 2;
+      
+      lines.forEach((line, index) => {
+        ctx.fillText(line, 300, startY + index * lineHeight);
+      });
+      
+      // Reset shadow
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      
+      // Add subtle branding
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'right';
+      ctx.fillText('RetroPost', 580, 380);
+      
+      resolve(canvas.toDataURL('image/jpeg', 0.8));
+    };
+    
+    img.onerror = () => {
+      console.log('🎨 Image failed to load, creating gradient background');
+      
+      // Create gradient background as fallback
+      const gradient = ctx.createLinearGradient(0, 0, 600, 400);
+      gradient.addColorStop(0, '#667eea');
+      gradient.addColorStop(1, '#764ba2');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, 600, 400);
+      
+      // Add text with same styling as above
+      ctx.fillStyle = textColor;
+      ctx.font = `bold ${fontSize}px Arial`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+      ctx.shadowBlur = 4;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
+      
+      const words = frontText.split(' ');
+      const lines: string[] = [];
+      let currentLine = '';
+      
+      for (const word of words) {
+        const testLine = currentLine + (currentLine ? ' ' : '') + word;
+        const metrics = ctx.measureText(testLine);
+        
+        if (metrics.width > 500 && currentLine) {
+          lines.push(currentLine);
+          currentLine = word;
+        } else {
+          currentLine = testLine;
+        }
+      }
+      if (currentLine) lines.push(currentLine);
+      
+      const lineHeight = fontSize * 1.2;
+      const startY = 200 - ((lines.length - 1) * lineHeight) / 2;
+      
+      lines.forEach((line, index) => {
+        ctx.fillText(line, 300, startY + index * lineHeight);
+      });
+      
+      resolve(canvas.toDataURL('image/jpeg', 0.8));
+    };
+    
+    // Start loading image
+    img.src = backgroundImageUrl;
+  });
 };
 
-// Create fallback image immediately
-const createFallbackImage = (text: string, isBack = false) => {
-  console.log('🎨 Creating fallback image:', text);
+// INSTANT back side generation
+const generateBackCanvas = (
+  message: string, 
+  signature: string, 
+  recipientName: string, 
+  recipientEmail: string, 
+  senderName: string
+): string => {
+  console.log('📝 Generating back canvas instantly...');
   
   const canvas = document.createElement('canvas');
   canvas.width = 600;
   canvas.height = 400;
   const ctx = canvas.getContext('2d')!;
   
-  if (isBack) {
-    // Back side - white background with text
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, 600, 400);
+  // White background
+  ctx.fillStyle = 'white';
+  ctx.fillRect(0, 0, 600, 400);
+  
+  // Border
+  ctx.strokeStyle = '#ddd';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(10, 10, 580, 380);
+  
+  // Header
+  ctx.fillStyle = '#333';
+  ctx.font = 'bold 24px Arial';
+  ctx.textAlign = 'center';
+  ctx.fillText('RetroPost Razglednica', 300, 50);
+  
+  // Message section
+  ctx.font = 'bold 14px Arial';
+  ctx.textAlign = 'left';
+  ctx.fillText('PORUKA:', 30, 90);
+  
+  // Message text with word wrap
+  ctx.font = '16px Arial';
+  ctx.fillStyle = '#555';
+  const messageWords = message.split(' ');
+  let messageLine = '';
+  let messageY = 120;
+  
+  for (const word of messageWords) {
+    const testLine = messageLine + (messageLine ? ' ' : '') + word;
+    const metrics = ctx.measureText(testLine);
     
-    // Border
-    ctx.strokeStyle = '#ddd';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(10, 10, 580, 380);
-    
-    // Text
-    ctx.fillStyle = '#333';
-    ctx.font = 'bold 24px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('RetroPost Razglednica', 300, 60);
-    
-    ctx.font = '16px Arial';
-    ctx.textAlign = 'left';
-    ctx.fillText('Poruka:', 40, 120);
-    
-    // Message text (wrap it)
-    const words = text.split(' ');
-    let line = '';
-    let y = 150;
-    
-    for (let n = 0; n < words.length; n++) {
-      const testLine = line + words[n] + ' ';
-      const metrics = ctx.measureText(testLine);
-      const testWidth = metrics.width;
-      
-      if (testWidth > 520 && n > 0) {
-        ctx.fillText(line, 40, y);
-        line = words[n] + ' ';
-        y += 25;
-      } else {
-        line = testLine;
-      }
+    if (metrics.width > 520 && messageLine) {
+      ctx.fillText(messageLine, 30, messageY);
+      messageLine = word;
+      messageY += 25;
+    } else {
+      messageLine = testLine;
     }
-    ctx.fillText(line, 40, y);
+  }
+  if (messageLine) {
+    ctx.fillText(messageLine, 30, messageY);
+  }
+  
+  // Signature
+  if (signature) {
+    ctx.font = 'italic 16px Arial';
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#667eea';
+    ctx.fillText(`- ${signature}`, 570, messageY + 40);
+  }
+  
+  // Divider line
+  ctx.strokeStyle = '#ddd';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(30, 300);
+  ctx.lineTo(570, 300);
+  ctx.stroke();
+  
+  // Address section
+  ctx.font = 'bold 12px Arial';
+  ctx.fillStyle = '#333';
+  ctx.textAlign = 'left';
+  ctx.fillText('PRIMA:', 30, 330);
+  
+  ctx.font = '14px Arial';
+  ctx.fillStyle = '#555';
+  ctx.fillText(recipientName || 'Ime primatelja', 30, 350);
+  ctx.font = '12px Arial';
+  ctx.fillStyle = '#777';
+  ctx.fillText(recipientEmail, 30, 370);
+  
+  // Sender
+  ctx.font = 'bold 12px Arial';
+  ctx.fillStyle = '#333';
+  ctx.textAlign = 'right';
+  ctx.fillText('ŠALJE:', 570, 330);
+  
+  ctx.font = '14px Arial';
+  ctx.fillStyle = '#555';
+  ctx.fillText(senderName, 570, 350);
+  
+  // Footer
+  ctx.font = '10px Arial';
+  ctx.fillStyle = '#999';
+  ctx.textAlign = 'center';
+  ctx.fillText('RetroPost.com - Digitalne razglednice', 300, 390);
+  
+  return canvas.toDataURL('image/jpeg', 0.8);
+};
+
+// SUPER FAST postcard generation - NO html2canvas dependency!
+export const capturePostcardImages = async (frontRef: HTMLElement, backRef: HTMLElement) => {
+  console.log('⚡ INSTANT Canvas generation starting...');
+  
+  try {
+    // Extract data from DOM elements
+    const frontTextElement = frontRef.querySelector('div[style*="color"]') as HTMLElement;
+    const frontText = frontTextElement?.textContent || 'Pozdrav iz prekrasnog mjesta!';
     
-    // Footer
-    ctx.font = '12px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillStyle = '#666';
-    ctx.fillText('RetroPost.com - Digitalne razglednice', 300, 370);
+    // Extract styling
+    const computedStyle = frontTextElement ? window.getComputedStyle(frontTextElement) : null;
+    const textColor = computedStyle?.color || '#ffffff';
+    const fontSize = parseInt(computedStyle?.fontSize || '24') || 24;
+    const fontFamily = computedStyle?.fontFamily?.includes('serif') ? 'serif' : 
+                      computedStyle?.fontFamily?.includes('mono') ? 'mono' :
+                      computedStyle?.fontFamily?.includes('cursive') ? 'cursive' : 'sans';
     
-  } else {
-    // Front side - gradient background
+    // Get background image
+    const imgElement = frontRef.querySelector('img') as HTMLImageElement;
+    const backgroundImageUrl = imgElement?.src || 'https://images.pexels.com/photos/457882/pexels-photo-457882.jpeg?auto=compress&cs=tinysrgb&w=800';
+    
+    // Extract back side data
+    const messageElements = backRef.querySelectorAll('div');
+    let message = 'Vaša poruka ovdje...';
+    let signature = '';
+    let recipientName = 'Ime primatelja';
+    let recipientEmail = 'email@primjer.com';
+    let senderName = 'Vaše ime';
+    
+    // Try to extract actual data from back side
+    messageElements.forEach(el => {
+      const text = el.textContent || '';
+      if (text.includes('Ovdje će biti vaša osobna poruka') || text.length > 20) {
+        message = text.replace('Ovdje će biti vaša osobna poruka...', '').trim() || message;
+      }
+      if (text.includes('Ime primatelja') && text !== 'Ime primatelja') {
+        recipientName = text;
+      }
+      if (text.includes('@')) {
+        recipientEmail = text;
+      }
+      if (text.includes('Vaše ime') && text !== 'Vaše ime') {
+        senderName = text;
+      }
+    });
+    
+    console.log('📊 Extracted data:', { frontText, textColor, fontSize, fontFamily, message, recipientName, senderName });
+    
+    // Generate both images in parallel using Canvas API
+    const [frontImage, backImage] = await Promise.all([
+      generatePostcardCanvas(backgroundImageUrl, frontText, textColor, fontSize, fontFamily),
+      Promise.resolve(generateBackCanvas(message, signature, recipientName, recipientEmail, senderName))
+    ]);
+    
+    console.log('✅ Canvas generation completed instantly!');
+    
+    return {
+      frontImage,
+      backImage
+    };
+    
+  } catch (error) {
+    console.error('❌ Canvas generation failed:', error);
+    
+    // Emergency fallback - simple colored rectangles with text
+    const canvas = document.createElement('canvas');
+    canvas.width = 600;
+    canvas.height = 400;
+    const ctx = canvas.getContext('2d')!;
+    
+    // Front fallback
     const gradient = ctx.createLinearGradient(0, 0, 600, 400);
     gradient.addColorStop(0, '#667eea');
     gradient.addColorStop(1, '#764ba2');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 600, 400);
     
-    // Text
     ctx.fillStyle = 'white';
-    ctx.font = 'bold 32px Arial';
+    ctx.font = 'bold 24px Arial';
     ctx.textAlign = 'center';
-    ctx.shadowColor = 'rgba(0,0,0,0.5)';
-    ctx.shadowBlur = 4;
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 2;
+    ctx.fillText('Pozdrav iz prekrasnog mjesta!', 300, 200);
     
-    // Split text into lines
-    const words = text.split(' ');
-    let line = '';
-    let y = 180;
+    const frontFallback = canvas.toDataURL('image/jpeg', 0.8);
     
-    for (let n = 0; n < words.length; n++) {
-      const testLine = line + words[n] + ' ';
-      const metrics = ctx.measureText(testLine);
-      const testWidth = metrics.width;
-      
-      if (testWidth > 500 && n > 0) {
-        ctx.fillText(line, 300, y);
-        line = words[n] + ' ';
-        y += 40;
-      } else {
-        line = testLine;
-      }
-    }
-    ctx.fillText(line, 300, y);
+    // Back fallback
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, 600, 400);
+    ctx.fillStyle = 'black';
+    ctx.font = '20px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('RetroPost Razglednica', 300, 200);
     
-    // Reset shadow
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
+    const backFallback = canvas.toDataURL('image/jpeg', 0.8);
     
-    // Subtitle
-    ctx.font = '16px Arial';
-    ctx.fillText('RetroPost Razglednica', 300, 350);
-  }
-  
-  return canvas.toDataURL('image/jpeg', 0.8);
-};
-
-// SUPER FAST image capture with immediate fallback
-export const capturePostcardImages = async (frontRef: HTMLElement, backRef: HTMLElement) => {
-  console.log('🚀 FAST capture starting...');
-  
-  // Get text content immediately for fallbacks
-  const frontText = frontRef.querySelector('div[style*="color"]')?.textContent || 'Pozdrav iz prekrasnog mjesta!';
-  const backText = backRef.querySelector('div')?.textContent || 'Vaša poruka ovdje...';
-  
-  try {
-    // Try VERY fast capture - only 2 seconds!
-    console.log('⚡ Attempting ultra-fast capture...');
-    
-    const captureOptions = {
-      scale: 0.8, // Even smaller scale
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      imageTimeout: 1000, // 1 second only!
-      removeContainer: true,
-      foreignObjectRendering: false,
-      width: Math.min(frontRef.offsetWidth, 600),
-      height: Math.min(frontRef.offsetHeight, 400)
-    };
-    
-    // Race condition - whoever finishes first wins!
-    const capturePromise = Promise.all([
-      captureWithTimeout(frontRef, captureOptions, 2000), // 2 sec max
-      captureWithTimeout(backRef, captureOptions, 2000)   // 2 sec max
-    ]);
-    
-    // Also prepare fallbacks immediately
-    const fallbackPromise = new Promise(resolve => {
-      setTimeout(() => {
-        console.log('🎨 Using fallback images');
-        resolve([
-          createFallbackImage(frontText, false),
-          createFallbackImage(backText, true)
-        ]);
-      }, 1500); // Fallback after 1.5 seconds
-    });
-    
-    // Race between capture and fallback
-    const result = await Promise.race([
-      capturePromise.then(([frontCanvas, backCanvas]) => {
-        console.log('✅ Real capture succeeded!');
-        return {
-          frontImage: frontCanvas.toDataURL('image/jpeg', 0.7),
-          backImage: backCanvas.toDataURL('image/jpeg', 0.7)
-        };
-      }),
-      fallbackPromise.then(([frontImage, backImage]) => {
-        console.log('🎨 Using fallback images');
-        return { frontImage, backImage };
-      })
-    ]);
-    
-    return result as { frontImage: string; backImage: string };
-    
-  } catch (error) {
-    console.log('❌ All capture methods failed, using emergency fallback');
-    
-    // Emergency fallback - always works
     return {
-      frontImage: createFallbackImage(frontText, false),
-      backImage: createFallbackImage(backText, true)
+      frontImage: frontFallback,
+      backImage: backFallback
     };
   }
 };
@@ -302,7 +455,7 @@ export const sendEmail = async (formData: EmailData): Promise<void> => {
 };
 
 export const sendPostcard = async (postcardData: PostcardEmailData): Promise<void> => {
-  console.log('🚀 FAST postcard send starting...');
+  console.log('⚡ INSTANT postcard send starting...');
   console.log('📋 Postcard data:', {
     recipientEmail: postcardData.recipientEmail,
     recipientName: postcardData.recipientName,
@@ -368,9 +521,9 @@ export const sendPostcard = async (postcardData: PostcardEmailData): Promise<voi
     console.log('🔄 Primary postcard service failed, using FormSubmit backup...');
     
     try {
-      // Create SIMPLE HTML email - no complex styling
-      const simpleHtmlContent = `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      // Create OPTIMIZED HTML email
+      const optimizedHtmlContent = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f5f5;">
           <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 10px 10px 0 0;">
             <h1 style="margin: 0; font-size: 24px;">🌟 Digitalna Razglednica 🌟</h1>
             <p style="margin: 10px 0 0 0;">Poslano putem RetroPost</p>
@@ -421,7 +574,7 @@ export const sendPostcard = async (postcardData: PostcardEmailData): Promise<voi
         </div>
       `;
       
-      // SIMPLIFIED FormSubmit payload
+      // STREAMLINED FormSubmit payload
       const formSubmitPayload = {
         _subject: `🌟 Nova razglednica od ${postcardData.senderName}`,
         _template: 'box',
@@ -433,10 +586,10 @@ export const sendPostcard = async (postcardData: PostcardEmailData): Promise<voi
         recipient_name: postcardData.recipientName,
         recipient_email: postcardData.recipientEmail,
         message: postcardData.message,
-        html_content: simpleHtmlContent
+        html_content: optimizedHtmlContent
       };
       
-      console.log('📧 Sending FAST postcard via FormSubmit...');
+      console.log('📧 Sending INSTANT postcard via FormSubmit...');
       
       const formSubmitResponse = await fetch('https://formsubmit.co/jimgitara@gmail.com', {
         method: 'POST',

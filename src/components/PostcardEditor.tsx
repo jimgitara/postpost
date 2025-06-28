@@ -31,19 +31,13 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
     senderName: '',
   });
 
-  // Check if refs are ready
-  const refsReady = frontRef.current && backRef.current;
+  // Check if refs are ready - always true now since we don't depend on html2canvas
+  const refsReady = true;
 
-  // Quick refs check
+  // Quick setup
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (frontRef.current && backRef.current) {
-        console.log('Postcard refs are ready');
-      }
-    }, 50);
-    
-    return () => clearTimeout(timer);
-  }, [step]);
+    console.log('PostcardEditor ready - using Canvas API directly');
+  }, []);
 
   const fonts = [
     { value: 'serif', label: 'Serif', className: 'font-serif' },
@@ -103,7 +97,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
   };
 
   const handleDownload = async () => {
-    console.log('Starting download...');
+    console.log('🚀 Starting INSTANT download...');
     
     if (!frontRef.current || !backRef.current) {
       setSendError('Razglednica se još učitava. Molimo pričekajte trenutak i pokušajte ponovno.');
@@ -114,6 +108,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
       setSendError(null);
       setIsCapturing(true);
       
+      // Use our new Canvas API method - INSTANT!
       const { frontImage, backImage } = await capturePostcardImages(frontRef.current, backRef.current);
       
       // Download front
@@ -130,7 +125,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
         backLink.click();
       }, 500);
       
-      console.log('Download completed successfully');
+      console.log('✅ Download completed successfully');
     } catch (error) {
       console.error('Error downloading postcard:', error);
       setSendError('Greška pri preuzimanju razglednice. Molimo pokušajte ponovno.');
@@ -140,7 +135,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
   };
 
   const handleSend = async () => {
-    console.log('🚀 FAST send button clicked!');
+    console.log('⚡ INSTANT send button clicked!');
     
     if (!validateForm()) {
       console.log('Form validation failed');
@@ -156,31 +151,23 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
     setIsCapturing(true);
     setSendError(null);
     setSendSuccess(false);
-    console.log('⚡ Starting ULTRA FAST postcard send...');
+    console.log('⚡ Starting INSTANT postcard send...');
     
     try {
-      // PARALLEL processing - capture and prepare email data simultaneously
-      console.log('📸 Starting parallel capture and email prep...');
+      // INSTANT Canvas generation - no waiting!
+      console.log('🎨 Starting INSTANT Canvas generation...');
       
-      const capturePromise = capturePostcardImages(frontRef.current, backRef.current);
-      
-      // Prepare basic email data while capturing
-      const basicEmailData = {
-        recipientEmail: customization.recipientEmail,
-        recipientName: customization.recipientName || 'Dragi prijatelj',
-        senderName: customization.senderName,
-        message: customization.message || customization.frontText
-      };
-      
-      // Wait for capture (max 3 seconds due to our aggressive timeout)
-      const { frontImage, backImage } = await capturePromise;
-      console.log('✅ Images captured, sending email...');
+      const { frontImage, backImage } = await capturePostcardImages(frontRef.current, backRef.current);
+      console.log('✅ Images generated instantly, sending email...');
       
       setIsCapturing(false);
       
       // Send postcard with images
       await sendPostcard({
-        ...basicEmailData,
+        recipientEmail: customization.recipientEmail,
+        recipientName: customization.recipientName || 'Dragi prijatelj',
+        senderName: customization.senderName,
+        message: customization.message || customization.frontText,
         frontImageData: frontImage,
         backImageData: backImage
       });
@@ -407,7 +394,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
         <div className="flex flex-col space-y-3 pt-4">
           <button
             onClick={handleDownload}
-            disabled={!refsReady || isCapturing}
+            disabled={isCapturing}
             className="flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isCapturing ? (
@@ -519,21 +506,11 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
             <div className="flex items-center space-x-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              <span className="text-blue-800 font-medium">Priprema razglednice...</span>
+              <span className="text-blue-800 font-medium">⚡ Instant kreiranje razglednice...</span>
             </div>
             <p className="text-blue-600 text-sm mt-1">
-              Ovo će potrajati samo nekoliko sekundi
+              Canvas API - bez čekanja!
             </p>
-          </div>
-        )}
-
-        {/* Ready Status */}
-        {!refsReady && !isCapturing && (
-          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
-            <div className="flex items-center space-x-2">
-              <Clock className="h-4 w-4 text-orange-600" />
-              <span className="text-orange-800 font-medium">Učitava razglednicu...</span>
-            </div>
           </div>
         )}
 
@@ -594,10 +571,10 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
           <div className="flex items-center space-x-2 text-blue-800">
             <Zap className="h-4 w-4" />
-            <span className="font-medium">⚡ ULTRA BRZA dostava putem emaila</span>
+            <span className="font-medium">⚡ INSTANT dostava putem emaila</span>
           </div>
           <p className="text-blue-600 text-sm mt-1">
-            Vaša razglednica će biti dostavljena u roku od 3 sekunde kao prekrasno formatiran HTML email s priloženim slikama.
+            Canvas API omogućuje instant kreiranje razglednice bez čekanja. Email će biti poslan odmah!
           </p>
         </div>
 
@@ -611,13 +588,13 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
           </button>
           <button
             onClick={handleSend}
-            disabled={!customization.recipientEmail || !customization.senderName || isSending || !refsReady || sendSuccess}
+            disabled={!customization.recipientEmail || !customization.senderName || isSending || sendSuccess}
             className="flex-1 flex items-center justify-center space-x-2 bg-gradient-to-r from-primary-500 to-secondary-500 text-white py-3 rounded-xl font-semibold hover:from-primary-600 hover:to-secondary-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSending ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>{isCapturing ? 'Priprema...' : 'Šalje se...'}</span>
+                <span>{isCapturing ? 'Kreira...' : 'Šalje se...'}</span>
               </>
             ) : sendSuccess ? (
               <>
@@ -627,7 +604,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
             ) : (
               <>
                 <Send className="h-4 w-4" />
-                <span>⚡ Pošalji BRZO</span>
+                <span>⚡ INSTANT pošalji</span>
               </>
             )}
           </button>
