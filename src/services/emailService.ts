@@ -602,8 +602,8 @@ export const sendOrderConfirmation = async (order: Order): Promise<void> => {
         </div>
       </td>
       <td style="padding: 15px; text-align: center;">${item.quantity}</td>
-      <td style="padding: 15px; text-align: right; font-weight: bold;">${item.price} kn</td>
-      <td style="padding: 15px; text-align: right; font-weight: bold;">${item.price * item.quantity} kn</td>
+      <td style="padding: 15px; text-align: right; font-weight: bold;">€${item.price}</td>
+      <td style="padding: 15px; text-align: right; font-weight: bold;">€${item.price * item.quantity}</td>
     </tr>
   `).join('');
 
@@ -645,7 +645,7 @@ export const sendOrderConfirmation = async (order: Order): Promise<void> => {
             <tfoot>
               <tr style="background: #f8f9fa;">
                 <td colspan="3" style="padding: 20px; text-align: right; font-size: 18px; font-weight: bold;">UKUPNO:</td>
-                <td style="padding: 20px; text-align: right; font-size: 20px; font-weight: bold; color: #667eea;">${order.total} kn</td>
+                <td style="padding: 20px; text-align: right; font-size: 20px; font-weight: bold; color: #667eea;">€${order.total}</td>
               </tr>
             </tfoot>
           </table>
