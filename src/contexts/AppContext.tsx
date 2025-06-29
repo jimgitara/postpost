@@ -297,12 +297,17 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   }, [language]);
 
   useEffect(() => {
+    console.log('🌙 Theme changed to:', theme);
     const previousTheme = localStorage.getItem('retropost_theme');
     localStorage.setItem('retropost_theme', theme);
     
-    // Update document class for theme
-    document.documentElement.className = ''; // Clear all classes first
+    // Clear all theme classes first
+    document.documentElement.classList.remove('dark', 'light');
+    
+    // Add the new theme class
     document.documentElement.classList.add(theme);
+    
+    console.log('🌙 Document classes after theme change:', document.documentElement.className);
     
     // Track theme change
     if (previousTheme && previousTheme !== theme) {
@@ -311,7 +316,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
+    console.log('🌙 Toggle theme called, current:', theme);
+    const newTheme = theme === 'dark' ? 'light' : 'dark';
+    console.log('🌙 Setting new theme:', newTheme);
+    setTheme(newTheme);
   };
 
   const t = (key: string): string => {
