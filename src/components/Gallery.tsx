@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Search, Filter, Heart, Eye, Zap, Sparkles, ShoppingCart, Euro } from 'lucide-react';
 import { PostcardTemplate } from '../types';
 import { useApp } from '../contexts/AppContext';
+import { useAnalytics } from '../hooks/useAnalytics';
 
 interface GalleryProps {
   onTemplateSelect: (template: PostcardTemplate) => void;
@@ -11,6 +12,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('sve');
   const { t } = useApp();
+  const { trackTemplateViewed, trackTemplateSelected, trackEvent } = useAnalytics();
 
   const templates: PostcardTemplate[] = [
     {
@@ -97,7 +99,32 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
     event.preventDefault();
     event.stopPropagation();
     console.log('Template clicked:', template);
+    
+    // Track template selection
+    trackTemplateSelected(template.id, template.name, template.category, template.price || 0);
+    
     onTemplateSelect(template);
+  };
+
+  const handleTemplateView = (template: PostcardTemplate) => {
+    // Track template view
+    trackTemplateViewed(template.id, template.name, template.category);
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    
+    // Track search behavior
+    if (value.length > 2) {
+      trackEvent('gallery_search', 'user_interaction', value);
+    }
+  };
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    
+    // Track category filter usage
+    trackEvent('gallery_filter', 'user_interaction', category);
   };
 
   return (
@@ -131,7 +158,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
               type="text"
               placeholder={t('gallery.search')}
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-slate-800/50 dark:bg-slate-800/50 light:bg-white/80 backdrop-blur-sm border border-blue-400/30 dark:border-blue-400/30 light:border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all text-white dark:text-white light:text-gray-900 placeholder-gray-400 dark:placeholder-gray-400 light:placeholder-gray-500"
             />
           </div>
@@ -139,7 +166,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
             <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-blue-400 dark:text-blue-400 light:text-blue-500" />
             <select
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={(e) => handleCategoryChange(e.target.value)}
               className="pl-10 pr-8 py-3 bg-slate-800/50 dark:bg-slate-800/50 light:bg-white/80 backdrop-blur-sm border border-blue-400/30 dark:border-blue-400/30 light:border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all appearance-none text-white dark:text-white light:text-gray-900 min-w-[200px]"
             >
               {categories.map(category => (
@@ -159,6 +186,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
               className="group relative bg-slate-800/50 dark:bg-slate-800/50 light:bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-blue-500/20 dark:hover:shadow-blue-500/20 light:hover:shadow-blue-500/10 transition-all duration-300 transform hover:-translate-y-2 overflow-hidden animate-fade-in border border-blue-400/20 dark:border-blue-400/20 light:border-blue-200 hover:border-blue-400/40 dark:hover:border-blue-400/40 light:hover:border-blue-300 cursor-pointer"
               style={{ animationDelay: `${index * 100}ms` }}
               onClick={(e) => handleTemplateClick(template, e)}
+              onMouseEnter={() => handleTemplateView(template)}
             >
               {/* Image */}
               <div className="relative overflow-hidden">
@@ -184,6 +212,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
                       className="bg-slate-800/90 backdrop-blur-sm text-blue-400 p-3 rounded-full hover:bg-slate-800 transition-colors border border-blue-400/30"
                       onClick={(e) => {
                         e.stopPropagation();
+                        trackEvent('template_preview', 'gallery', template.name);
                         console.log('Preview clicked for:', template.name);
                       }}
                     >
@@ -193,6 +222,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
                       className="bg-slate-800/90 backdrop-blur-sm text-pink-400 p-3 rounded-full hover:bg-slate-800 transition-colors border border-pink-400/30"
                       onClick={(e) => {
                         e.stopPropagation();
+                        trackEvent('template_favorite', 'gallery', template.name);
                         console.log('Favorite clicked for:', template.name);
                       }}
                     >

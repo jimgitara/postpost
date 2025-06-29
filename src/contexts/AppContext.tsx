@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { analyticsService } from '../services/analyticsService';
 
 export type Language = 'hr' | 'en';
 export type Theme = 'dark' | 'light';
@@ -286,10 +287,17 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   });
 
   useEffect(() => {
+    const previousLanguage = localStorage.getItem('retropost_language');
     localStorage.setItem('retropost_language', language);
+    
+    // Track language change
+    if (previousLanguage && previousLanguage !== language) {
+      analyticsService.trackLanguageChange(previousLanguage, language);
+    }
   }, [language]);
 
   useEffect(() => {
+    const previousTheme = localStorage.getItem('retropost_theme');
     localStorage.setItem('retropost_theme', theme);
     
     // Update document class for theme
@@ -299,6 +307,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     } else {
       document.documentElement.classList.add('light');
       document.documentElement.classList.remove('dark');
+    }
+    
+    // Track theme change
+    if (previousTheme && previousTheme !== theme) {
+      analyticsService.trackThemeChange(previousTheme, theme);
     }
   }, [theme]);
 

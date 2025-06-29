@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
 import Gallery from './components/Gallery';
@@ -9,13 +9,17 @@ import PostcardEditor from './components/PostcardEditor';
 import PhotoUpload from './components/PhotoUpload';
 import Footer from './components/Footer';
 import { AppProvider } from './contexts/AppContext';
+import { usePerformanceTracking } from './hooks/useAnalytics';
 import { PostcardTemplate } from './types';
 
-function App() {
+function AppContent() {
   const [selectedTemplate, setSelectedTemplate] = useState<PostcardTemplate | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+
+  // Track performance metrics
+  usePerformanceTracking();
 
   const handleTemplateSelect = (template: PostcardTemplate) => {
     console.log('App: Template selected:', template);
@@ -63,42 +67,48 @@ function App() {
   console.log('App render - showEditor:', showEditor, 'showUpload:', showUpload, 'selectedTemplate:', selectedTemplate);
 
   return (
-    <AppProvider>
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 dark:bg-gradient-to-br dark:from-slate-900 dark:via-blue-900 dark:to-slate-900 light:bg-gradient-to-br light:from-gray-50 light:via-blue-50 light:to-purple-50 transition-colors duration-300">
-        <Header onStartCreating={handleStartCreating} />
-        
-        {!showEditor && !showUpload ? (
-          <>
-            <Hero onStartCreating={handleStartCreating} onViewExamples={scrollToGallery} />
-            <Gallery onTemplateSelect={handleTemplateSelect} />
-            <HowItWorks />
-            <About />
-            <Contact />
-          </>
-        ) : showUpload ? (
-          <PhotoUpload onPhotoUploaded={handlePhotoUploaded} onBack={handleBackToGallery} />
-        ) : selectedTemplate ? (
-          <PostcardEditor 
-            template={selectedTemplate} 
-            onBack={handleBackToGallery}
-          />
-        ) : (
-          <div className="min-h-screen flex items-center justify-center">
-            <div className="text-white dark:text-white light:text-gray-900 text-center">
-              <h2 className="text-2xl font-bold mb-4">Greška</h2>
-              <p className="mb-4">Nema odabranog predloška</p>
-              <button 
-                onClick={handleBackToGallery}
-                className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors"
-              >
-                Natrag na galeriju
-              </button>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 dark:bg-gradient-to-br dark:from-slate-900 dark:via-blue-900 dark:to-slate-900 light:bg-gradient-to-br light:from-gray-50 light:via-blue-50 light:to-purple-50 transition-colors duration-300">
+      <Header onStartCreating={handleStartCreating} />
+      
+      {!showEditor && !showUpload ? (
+        <>
+          <Hero onStartCreating={handleStartCreating} onViewExamples={scrollToGallery} />
+          <Gallery onTemplateSelect={handleTemplateSelect} />
+          <HowItWorks />
+          <About />
+          <Contact />
+        </>
+      ) : showUpload ? (
+        <PhotoUpload onPhotoUploaded={handlePhotoUploaded} onBack={handleBackToGallery} />
+      ) : selectedTemplate ? (
+        <PostcardEditor 
+          template={selectedTemplate} 
+          onBack={handleBackToGallery}
+        />
+      ) : (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-white dark:text-white light:text-gray-900 text-center">
+            <h2 className="text-2xl font-bold mb-4">Greška</h2>
+            <p className="mb-4">Nema odabranog predloška</p>
+            <button 
+              onClick={handleBackToGallery}
+              className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              Natrag na galeriju
+            </button>
           </div>
-        )}
-        
-        <Footer />
-      </div>
+        </div>
+      )}
+      
+      <Footer />
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <AppProvider>
+      <AppContent />
     </AppProvider>
   );
 }
