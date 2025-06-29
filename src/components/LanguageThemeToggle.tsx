@@ -5,6 +5,11 @@ import { useApp } from '../contexts/AppContext';
 const LanguageThemeToggle: React.FC = () => {
   const { language, setLanguage, theme, toggleTheme } = useApp();
 
+  const handleThemeToggle = () => {
+    console.log('🌙 Theme toggle clicked, current theme:', theme);
+    toggleTheme();
+  };
+
   return (
     <div className="flex items-center space-x-2">
       {/* Language Toggle */}
@@ -39,7 +44,7 @@ const LanguageThemeToggle: React.FC = () => {
 
       {/* Theme Toggle */}
       <button
-        onClick={toggleTheme}
+        onClick={handleThemeToggle}
         className="flex items-center space-x-1 text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 transition-all duration-300 p-2 rounded-lg hover:bg-slate-800/50 dark:hover:bg-slate-800/50 light:hover:bg-gray-100 group"
         title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
       >
