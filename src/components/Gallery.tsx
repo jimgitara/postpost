@@ -99,24 +99,24 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
   };
 
   return (
-    <section id="gallery" className="py-20 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 relative overflow-hidden dark:from-slate-800 dark:via-blue-800 dark:to-slate-800">
+    <section id="gallery" className="py-20 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 dark:from-slate-800 dark:via-blue-800 dark:to-slate-800 light:from-blue-50 light:via-white light:to-purple-50 relative overflow-hidden transition-all duration-300">
       {/* Background Grid */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none">
+      <div className="absolute inset-0 opacity-10 dark:opacity-10 light:opacity-5 pointer-events-none">
         <div className="absolute inset-0 bg-grid-pattern bg-[size:50px_50px]"></div>
       </div>
 
       {/* Glowing Orbs */}
-      <div className="absolute top-20 left-10 w-32 h-32 bg-blue-500/10 rounded-full blur-xl animate-pulse pointer-events-none"></div>
-      <div className="absolute bottom-20 right-10 w-40 h-40 bg-purple-500/10 rounded-full blur-xl animate-pulse delay-1000 pointer-events-none"></div>
+      <div className="absolute top-20 left-10 w-32 h-32 bg-blue-500/10 dark:bg-blue-500/10 light:bg-blue-500/5 rounded-full blur-xl animate-pulse pointer-events-none"></div>
+      <div className="absolute bottom-20 right-10 w-40 h-40 bg-purple-500/10 dark:bg-purple-500/10 light:bg-purple-500/5 rounded-full blur-xl animate-pulse delay-1000 pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white dark:text-white light:text-gray-900 mb-4 transition-colors duration-300">
             Odaberite svoj
             <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"> predložak</span>
           </h2>
-          <p className="text-xl text-gray-300 max-w-2xl mx-auto dark:text-gray-200">
+          <p className="text-xl text-gray-300 dark:text-gray-200 light:text-gray-600 max-w-2xl mx-auto transition-colors duration-300">
             Pregledajte našu kolekciju prekrasnih predložaka razglednica s cijenama
           </p>
         </div>
@@ -130,7 +130,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
               placeholder="Pretraži predloške..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-slate-800/50 backdrop-blur-sm border border-blue-400/30 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all text-white placeholder-gray-400 dark:bg-slate-700/50 dark:border-blue-300/30"
+              className="w-full pl-10 pr-4 py-3 bg-slate-800/50 dark:bg-slate-700/50 light:bg-white/80 backdrop-blur-sm border border-blue-400/30 dark:border-blue-300/30 light:border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all text-white dark:text-white light:text-gray-900 placeholder-gray-400 dark:placeholder-gray-400 light:placeholder-gray-500"
             />
           </div>
           <div className="relative">
@@ -138,10 +138,10 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="pl-10 pr-8 py-3 bg-slate-800/50 backdrop-blur-sm border border-blue-400/30 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all appearance-none text-white min-w-[200px] dark:bg-slate-700/50 dark:border-blue-300/30"
+              className="pl-10 pr-8 py-3 bg-slate-800/50 dark:bg-slate-700/50 light:bg-white/80 backdrop-blur-sm border border-blue-400/30 dark:border-blue-300/30 light:border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all appearance-none text-white dark:text-white light:text-gray-900 min-w-[200px]"
             >
               {categories.map(category => (
-                <option key={category.value} value={category.value} className="bg-slate-800 text-white dark:bg-slate-700">
+                <option key={category.value} value={category.value} className="bg-slate-800 dark:bg-slate-700 light:bg-white text-white dark:text-white light:text-gray-900">
                   {category.label}
                 </option>
               ))}
@@ -154,7 +154,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
           {filteredTemplates.map((template, index) => (
             <div
               key={template.id}
-              className="group relative bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 transform hover:-translate-y-2 overflow-hidden animate-fade-in border border-blue-400/20 hover:border-blue-400/40 cursor-pointer dark:bg-slate-700/50 dark:border-blue-300/20 dark:hover:border-blue-300/40"
+              className="group relative bg-slate-800/50 dark:bg-slate-700/50 light:bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-blue-500/20 dark:hover:shadow-blue-500/20 light:hover:shadow-blue-500/10 transition-all duration-300 transform hover:-translate-y-2 overflow-hidden animate-fade-in border border-blue-400/20 dark:border-blue-300/20 light:border-gray-200 hover:border-blue-400/40 dark:hover:border-blue-300/40 light:hover:border-blue-400/30 cursor-pointer"
               style={{ animationDelay: `${index * 100}ms` }}
               onClick={(e) => handleTemplateClick(template, e)}
             >
@@ -203,7 +203,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
               {/* Content */}
               <div className="p-6">
                 <div className="flex items-start justify-between mb-2">
-                  <h3 className="text-lg font-semibold text-white">{template.name}</h3>
+                  <h3 className="text-lg font-semibold text-white dark:text-white light:text-gray-900 transition-colors duration-300">{template.name}</h3>
                   <div className="text-right">
                     <div className="text-xl font-bold text-green-400 flex items-center">
                       <Euro className="h-4 w-4 mr-1" />
@@ -211,7 +211,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
                     </div>
                   </div>
                 </div>
-                <p className="text-gray-400 text-sm mb-4 dark:text-gray-300">{template.description}</p>
+                <p className="text-gray-400 dark:text-gray-300 light:text-gray-600 text-sm mb-4 transition-colors duration-300">{template.description}</p>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -246,8 +246,8 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
             <div className="text-gray-400 mb-4">
               <Zap className="h-16 w-16 mx-auto text-blue-400/50" />
             </div>
-            <h3 className="text-xl font-semibold text-white mb-2">Nema rezultata</h3>
-            <p className="text-gray-400 dark:text-gray-300">Pokušajte s drugačijim pojmovima pretrage ili kategorijom.</p>
+            <h3 className="text-xl font-semibold text-white dark:text-white light:text-gray-900 mb-2 transition-colors duration-300">Nema rezultata</h3>
+            <p className="text-gray-400 dark:text-gray-300 light:text-gray-600 transition-colors duration-300">Pokušajte s drugačijim pojmovima pretrage ili kategorijom.</p>
           </div>
         )}
       </div>

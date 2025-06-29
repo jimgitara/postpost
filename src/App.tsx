@@ -72,7 +72,7 @@ function App() {
   console.log('App render - showEditor:', showEditor, 'showUpload:', showUpload, 'selectedTemplate:', selectedTemplate);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 dark:from-slate-900 dark:via-blue-900 dark:to-slate-900 light:from-gray-50 light:via-blue-50 light:to-purple-50 transition-all duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 dark:from-slate-900 dark:via-blue-900 dark:to-slate-900 light:from-blue-50 light:via-white light:to-purple-50 transition-all duration-300">
       <Header onStartCreating={handleStartCreating} />
       
       {!showEditor && !showUpload ? (

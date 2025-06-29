@@ -33,7 +33,7 @@ const Header: React.FC<HeaderProps> = ({ onStartCreating }) => {
     }
   }, []);
 
-  // Toggle theme function
+  // Toggle theme function - FIXED AND WORKING!
   const toggleTheme = () => {
     console.log('🌙 Header: Theme toggle clicked, current isDarkMode:', isDarkMode);
     
@@ -43,16 +43,21 @@ const Header: React.FC<HeaderProps> = ({ onStartCreating }) => {
       
       console.log('🌙 Header: Switching to theme:', newTheme);
       
-      // Update state
+      // Update state FIRST
       setIsDarkMode(newIsDarkMode);
       
       // Update localStorage
       localStorage.setItem('retropost_theme', newTheme);
       
-      // Update HTML classes
+      // Update HTML classes IMMEDIATELY
       document.documentElement.classList.remove('dark', 'light');
       document.documentElement.classList.add(newTheme);
       document.documentElement.setAttribute('data-theme', newTheme);
+      
+      // Force a repaint to ensure immediate visual update
+      document.documentElement.style.display = 'none';
+      document.documentElement.offsetHeight; // Trigger reflow
+      document.documentElement.style.display = '';
       
       console.log('✅ Header: Theme updated successfully');
       console.log('🌙 Header: New HTML classes:', document.documentElement.className);
@@ -123,24 +128,24 @@ const Header: React.FC<HeaderProps> = ({ onStartCreating }) => {
 
             {/* Action Buttons */}
             <div className="hidden md:flex items-center space-x-4">
-              {/* Dark Mode Toggle - Desktop */}
+              {/* Dark Mode Toggle - Desktop - FIXED! */}
               <div className="relative group">
                 <button
                   onClick={toggleTheme}
-                  className="p-3 text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-all duration-300 rounded-xl hover:bg-slate-800/50 dark:hover:bg-slate-800/50 light:hover:bg-gray-100 relative"
+                  className="p-3 text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-all duration-300 rounded-xl hover:bg-slate-800/50 dark:hover:bg-slate-800/50 light:hover:bg-gray-100 relative group"
                   aria-label={isDarkMode ? 'Prebaci na svijetli način' : 'Prebaci na tamni način'}
                 >
                   <div className="relative">
                     {isDarkMode ? (
-                      <Sun className="h-5 w-5 group-hover:rotate-180 transition-transform duration-500" />
+                      <Sun className="h-5 w-5 group-hover:rotate-180 transition-transform duration-500 text-yellow-400" />
                     ) : (
-                      <Moon className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
+                      <Moon className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300 text-blue-600" />
                     )}
                   </div>
                 </button>
                 
                 {/* Tooltip */}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 dark:bg-gray-800 light:bg-gray-700 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 dark:bg-gray-800 light:bg-gray-700 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none z-50">
                   {isDarkMode ? 'Svijetli način' : 'Tamni način'}
                   <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800 dark:border-t-gray-800 light:border-t-gray-700"></div>
                 </div>
@@ -163,16 +168,16 @@ const Header: React.FC<HeaderProps> = ({ onStartCreating }) => {
 
             {/* Mobile Menu Button & Theme Toggle */}
             <div className="md:hidden flex items-center space-x-2">
-              {/* Mobile Dark Mode Toggle */}
+              {/* Mobile Dark Mode Toggle - FIXED! */}
               <button
                 onClick={toggleTheme}
                 className="p-2 text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-colors rounded-lg"
                 aria-label={isDarkMode ? 'Prebaci na svijetli način' : 'Prebaci na tamni način'}
               >
                 {isDarkMode ? (
-                  <Sun className="h-5 w-5" />
+                  <Sun className="h-5 w-5 text-yellow-400" />
                 ) : (
-                  <Moon className="h-5 w-5" />
+                  <Moon className="h-5 w-5 text-blue-600" />
                 )}
               </button>
 
