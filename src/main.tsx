@@ -9,9 +9,8 @@ import './index.css';
 // Initialize EmailJS
 initEmailJS();
 
-// Initialize Google Analytics
-// Replace 'G-XXXXXXXXXX' with your actual Google Analytics 4 Measurement ID
-analyticsService.init('G-XXXXXXXXXX');
+// Initialize Google Analytics with your actual Measurement ID
+analyticsService.init('G-7JG4GB7BCX');
 
 // Initialize theme on app start
 const savedTheme = localStorage.getItem('retropost_theme') || 'dark';
