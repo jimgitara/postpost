@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Zap, Mail, User, Menu, X, Heart } from 'lucide-react';
 import CartIcon from './CartIcon';
 import ShoppingCart from './ShoppingCart';
+import LanguageThemeToggle from './LanguageThemeToggle';
+import { useApp } from '../contexts/AppContext';
 
 interface HeaderProps {
   onStartCreating: () => void;
@@ -10,6 +12,7 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ onStartCreating }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const { t } = useApp();
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -21,7 +24,7 @@ const Header: React.FC<HeaderProps> = ({ onStartCreating }) => {
 
   return (
     <>
-      <header className="bg-slate-900/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-blue-400/20">
+      <header className="bg-slate-900/95 dark:bg-slate-900/95 light:bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-blue-400/20 dark:border-blue-400/20 light:border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             {/* Logo */}
@@ -41,39 +44,40 @@ const Header: React.FC<HeaderProps> = ({ onStartCreating }) => {
             <nav className="hidden md:flex items-center space-x-8">
               <button 
                 onClick={() => scrollToSection('gallery')}
-                className="text-gray-300 hover:text-blue-400 transition-all duration-300 font-medium relative group"
+                className="text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 transition-all duration-300 font-medium relative group"
               >
-                Galerija
+                {t('header.gallery')}
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full"></span>
               </button>
               <button 
                 onClick={() => scrollToSection('how-it-works')}
-                className="text-gray-300 hover:text-blue-400 transition-all duration-300 font-medium relative group"
+                className="text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 transition-all duration-300 font-medium relative group"
               >
-                Kako funkcionira
+                {t('header.howItWorks')}
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full"></span>
               </button>
               <button 
                 onClick={() => scrollToSection('about')}
-                className="text-gray-300 hover:text-blue-400 transition-all duration-300 font-medium relative group"
+                className="text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 transition-all duration-300 font-medium relative group"
               >
-                O nama
+                {t('header.about')}
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full"></span>
               </button>
               <button 
                 onClick={() => scrollToSection('contact')}
-                className="text-gray-300 hover:text-blue-400 transition-all duration-300 font-medium relative group"
+                className="text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 transition-all duration-300 font-medium relative group"
               >
-                Kontakt
+                {t('header.contact')}
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full"></span>
               </button>
             </nav>
 
             {/* Action Buttons */}
             <div className="hidden md:flex items-center space-x-4">
-              <button className="flex items-center space-x-2 text-gray-300 hover:text-pink-400 transition-all duration-300">
+              <LanguageThemeToggle />
+              <button className="flex items-center space-x-2 text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-pink-400 transition-all duration-300">
                 <Mail className="h-4 w-4" />
-                <span>Moje razglednice</span>
+                <span>{t('header.myPostcards')}</span>
               </button>
               <CartIcon onClick={() => setIsCartOpen(true)} />
               <button 
@@ -82,55 +86,58 @@ const Header: React.FC<HeaderProps> = ({ onStartCreating }) => {
               >
                 <div className="absolute inset-0 bg-white/10 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                 <Heart className="h-4 w-4 relative z-10" />
-                <span className="relative z-10">Počni kreirati</span>
+                <span className="relative z-10">{t('header.startCreating')}</span>
               </button>
             </div>
 
             {/* Mobile Menu Button */}
-            <button
-              className="md:hidden p-2 text-gray-300 hover:text-blue-400 transition-colors"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-            >
-              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
+            <div className="md:hidden flex items-center space-x-2">
+              <LanguageThemeToggle />
+              <button
+                className="p-2 text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 transition-colors"
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+              >
+                {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            </div>
           </div>
 
           {/* Mobile Menu */}
           {isMenuOpen && (
-            <div className="md:hidden py-4 border-t border-blue-400/20 animate-slide-up bg-slate-800/50 backdrop-blur-sm rounded-b-xl">
+            <div className="md:hidden py-4 border-t border-blue-400/20 dark:border-blue-400/20 light:border-gray-200 animate-slide-up bg-slate-800/50 dark:bg-slate-800/50 light:bg-gray-50/50 backdrop-blur-sm rounded-b-xl">
               <nav className="flex flex-col space-y-4">
                 <button 
                   onClick={() => scrollToSection('gallery')}
-                  className="text-left text-gray-300 hover:text-blue-400 transition-colors font-medium"
+                  className="text-left text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 transition-colors font-medium"
                 >
-                  Galerija
+                  {t('header.gallery')}
                 </button>
                 <button 
                   onClick={() => scrollToSection('how-it-works')}
-                  className="text-left text-gray-300 hover:text-blue-400 transition-colors font-medium"
+                  className="text-left text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 transition-colors font-medium"
                 >
-                  Kako funkcionira
+                  {t('header.howItWorks')}
                 </button>
                 <button 
                   onClick={() => scrollToSection('about')}
-                  className="text-left text-gray-300 hover:text-blue-400 transition-colors font-medium"
+                  className="text-left text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 transition-colors font-medium"
                 >
-                  O nama
+                  {t('header.about')}
                 </button>
                 <button 
                   onClick={() => scrollToSection('contact')}
-                  className="text-left text-gray-300 hover:text-blue-400 transition-colors font-medium"
+                  className="text-left text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 transition-colors font-medium"
                 >
-                  Kontakt
+                  {t('header.contact')}
                 </button>
                 <div className="flex flex-col space-y-2 pt-2">
-                  <button className="flex items-center space-x-2 text-gray-300 hover:text-pink-400 transition-colors">
+                  <button className="flex items-center space-x-2 text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-pink-400 transition-colors">
                     <Mail className="h-4 w-4" />
-                    <span>Moje razglednice</span>
+                    <span>{t('header.myPostcards')}</span>
                   </button>
                   <button 
                     onClick={() => setIsCartOpen(true)}
-                    className="flex items-center space-x-2 text-gray-300 hover:text-blue-400 transition-colors"
+                    className="flex items-center space-x-2 text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 transition-colors"
                   >
                     <CartIcon onClick={() => setIsCartOpen(true)} />
                   </button>
@@ -139,7 +146,7 @@ const Header: React.FC<HeaderProps> = ({ onStartCreating }) => {
                     className="flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-3 rounded-xl font-semibold hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
                   >
                     <Heart className="h-4 w-4" />
-                    <span>Počni kreirati</span>
+                    <span>{t('header.startCreating')}</span>
                   </button>
                 </div>
               </nav>
