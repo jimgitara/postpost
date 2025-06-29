@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Filter, Heart, Eye, Zap, Sparkles, ShoppingCart, Euro } from 'lucide-react';
 import { PostcardTemplate } from '../types';
-import { useApp } from '../contexts/AppContext';
-import { useAnalytics } from '../hooks/useAnalytics';
 
 interface GalleryProps {
   onTemplateSelect: (template: PostcardTemplate) => void;
@@ -11,81 +9,79 @@ interface GalleryProps {
 const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('sve');
-  const { t } = useApp();
-  const { trackTemplateViewed, trackTemplateSelected, trackEvent } = useAnalytics();
 
   const templates: PostcardTemplate[] = [
     {
       id: '1',
-      name: t('gallery.nature') === 'Nature' ? 'Tropical Beach' : 'Tropska Plaža',
+      name: 'Tropska Plaža',
       image: 'https://images.pexels.com/photos/457882/pexels-photo-457882.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'priroda',
-      description: t('gallery.nature') === 'Nature' ? 'Beautiful tropical beach with crystal clear water' : 'Prekrasna tropska plaža s kristalno čistim morem',
-      price: 5
+      description: 'Prekrasna tropska plaža s kristalno čistim morem',
+      price: 12
     },
     {
       id: '2',
-      name: t('gallery.nature') === 'Nature' ? 'Mountain Peak' : 'Planinski Vrh',
+      name: 'Planinski Vrh',
       image: 'https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'priroda',
-      description: t('gallery.nature') === 'Nature' ? 'Spectacular view from mountain peak' : 'Spektakularan pogled s planinskog vrha',
-      price: 6
+      description: 'Spektakularan pogled s planinskog vrha',
+      price: 15
     },
     {
       id: '3',
-      name: t('gallery.cities') === 'Cities' ? 'City Panorama' : 'Gradska Panorama',
+      name: 'Gradska Panorama',
       image: 'https://images.pexels.com/photos/378570/pexels-photo-378570.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'grad',
-      description: t('gallery.cities') === 'Cities' ? 'Modern city panorama at dusk' : 'Moderna gradska panorama u sumrak',
-      price: 7
+      description: 'Moderna gradska panorama u sumrak',
+      price: 18
     },
     {
       id: '4',
-      name: t('gallery.romance') === 'Romance' ? 'Romantic Sunset' : 'Romantični Zalazak',
+      name: 'Romantični Zalazak',
       image: 'https://images.pexels.com/photos/206359/pexels-photo-206359.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'romantika',
-      description: t('gallery.romance') === 'Romance' ? 'Magical sunset over the sea' : 'Čaroban zalazak sunca nad morem',
-      price: 8
+      description: 'Čaroban zalazak sunca nad morem',
+      price: 20
     },
     {
       id: '5',
-      name: t('gallery.nature') === 'Nature' ? 'Autumn Forest' : 'Jesenska Šuma',
+      name: 'Jesenska Šuma',
       image: 'https://images.pexels.com/photos/33109/fall-autumn-red-season.jpg?auto=compress&cs=tinysrgb&w=800',
       category: 'priroda',
-      description: t('gallery.nature') === 'Nature' ? 'Colorful autumn forest in full glory' : 'Šarena jesenska šuma u punoj slavi',
-      price: 5
+      description: 'Šarena jesenska šuma u punoj slavi',
+      price: 14
     },
     {
       id: '6',
-      name: t('gallery.nature') === 'Nature' ? 'Peaceful Lake' : 'Mirno Jezero',
+      name: 'Mirno Jezero',
       image: 'https://images.pexels.com/photos/1032650/pexels-photo-1032650.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'priroda',
-      description: t('gallery.nature') === 'Nature' ? 'Peaceful lake surrounded by mountains' : 'Spokojno jezero okruženo planinama',
-      price: 6
+      description: 'Spokojno jezero okruženo planinama',
+      price: 16
     },
     {
       id: '7',
-      name: t('gallery.cities') === 'Cities' ? 'Urban Style' : 'Urbani Stil',
+      name: 'Urbani Stil',
       image: 'https://images.pexels.com/photos/936722/pexels-photo-936722.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'grad',
-      description: t('gallery.cities') === 'Cities' ? 'Modern urban design and architecture' : 'Moderni urbani dizajn i arhitektura',
-      price: 7
+      description: 'Moderni urbani dizajn i arhitektura',
+      price: 17
     },
     {
       id: '8',
-      name: t('gallery.nature') === 'Nature' ? 'Flower Garden' : 'Cvijetni Vrt',
+      name: 'Cvijetni Vrt',
       image: 'https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'priroda',
-      description: t('gallery.nature') === 'Nature' ? 'Beautiful flower garden in spring' : 'Prekrasan cvijetni vrt u proljeće',
-      price: 4
+      description: 'Prekrasan cvijetni vrt u proljeće',
+      price: 13
     }
   ];
 
   const categories = [
-    { value: 'sve', label: t('gallery.allCategories') },
-    { value: 'priroda', label: t('gallery.nature') },
-    { value: 'grad', label: t('gallery.cities') },
-    { value: 'romantika', label: t('gallery.romance') }
+    { value: 'sve', label: 'Sve kategorije' },
+    { value: 'priroda', label: 'Priroda' },
+    { value: 'grad', label: 'Gradovi' },
+    { value: 'romantika', label: 'Romantika' }
   ];
 
   const filteredTemplates = templates.filter(template => {
@@ -99,78 +95,53 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
     event.preventDefault();
     event.stopPropagation();
     console.log('Template clicked:', template);
-    
-    // Track template selection
-    trackTemplateSelected(template.id, template.name, template.category, template.price || 0);
-    
     onTemplateSelect(template);
   };
 
-  const handleTemplateView = (template: PostcardTemplate) => {
-    // Track template view
-    trackTemplateViewed(template.id, template.name, template.category);
-  };
-
-  const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-    
-    // Track search behavior
-    if (value.length > 2) {
-      trackEvent('gallery_search', 'user_interaction', value);
-    }
-  };
-
-  const handleCategoryChange = (category: string) => {
-    setSelectedCategory(category);
-    
-    // Track category filter usage
-    trackEvent('gallery_filter', 'user_interaction', category);
-  };
-
   return (
-    <section id="gallery" className="py-20 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 dark:from-slate-900 dark:via-blue-900 dark:to-slate-900 light:from-gray-50 light:via-blue-50 light:to-purple-50 relative overflow-hidden transition-colors duration-300">
+    <section id="gallery" className="py-20 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 relative overflow-hidden dark:from-slate-800 dark:via-blue-800 dark:to-slate-800">
       {/* Background Grid */}
-      <div className="absolute inset-0 opacity-10 dark:opacity-10 light:opacity-5 pointer-events-none">
+      <div className="absolute inset-0 opacity-10 pointer-events-none">
         <div className="absolute inset-0 bg-grid-pattern bg-[size:50px_50px]"></div>
       </div>
 
       {/* Glowing Orbs */}
-      <div className="absolute top-20 left-10 w-32 h-32 bg-blue-500/10 dark:bg-blue-500/10 light:bg-blue-500/5 rounded-full blur-xl animate-pulse pointer-events-none"></div>
-      <div className="absolute bottom-20 right-10 w-40 h-40 bg-purple-500/10 dark:bg-purple-500/10 light:bg-purple-500/5 rounded-full blur-xl animate-pulse delay-1000 pointer-events-none"></div>
+      <div className="absolute top-20 left-10 w-32 h-32 bg-blue-500/10 rounded-full blur-xl animate-pulse pointer-events-none"></div>
+      <div className="absolute bottom-20 right-10 w-40 h-40 bg-purple-500/10 rounded-full blur-xl animate-pulse delay-1000 pointer-events-none"></div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white dark:text-white light:text-gray-900 mb-4">
-            {t('gallery.title')}
-            <span className="bg-gradient-to-r from-blue-400 to-purple-400 dark:from-blue-400 dark:to-purple-400 light:from-blue-600 light:to-purple-600 bg-clip-text text-transparent"> {t('gallery.titleHighlight')}</span>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4">
+            Odaberite svoj
+            <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent"> predložak</span>
           </h2>
-          <p className="text-xl text-gray-300 dark:text-gray-300 light:text-gray-600 max-w-2xl mx-auto">
-            {t('gallery.subtitle')}
+          <p className="text-xl text-gray-300 max-w-2xl mx-auto dark:text-gray-200">
+            Pregledajte našu kolekciju prekrasnih predložaka razglednica s cijenama
           </p>
         </div>
 
         {/* Search and Filter */}
         <div className="flex flex-col md:flex-row gap-4 mb-12">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-blue-400 dark:text-blue-400 light:text-blue-500" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-blue-400" />
             <input
               type="text"
-              placeholder={t('gallery.search')}
+              placeholder="Pretraži predloške..."
               value={searchTerm}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-slate-800/50 dark:bg-slate-800/50 light:bg-white/80 backdrop-blur-sm border border-blue-400/30 dark:border-blue-400/30 light:border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all text-white dark:text-white light:text-gray-900 placeholder-gray-400 dark:placeholder-gray-400 light:placeholder-gray-500"
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 bg-slate-800/50 backdrop-blur-sm border border-blue-400/30 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all text-white placeholder-gray-400 dark:bg-slate-700/50 dark:border-blue-300/30"
             />
           </div>
           <div className="relative">
-            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-blue-400 dark:text-blue-400 light:text-blue-500" />
+            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-blue-400" />
             <select
               value={selectedCategory}
-              onChange={(e) => handleCategoryChange(e.target.value)}
-              className="pl-10 pr-8 py-3 bg-slate-800/50 dark:bg-slate-800/50 light:bg-white/80 backdrop-blur-sm border border-blue-400/30 dark:border-blue-400/30 light:border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all appearance-none text-white dark:text-white light:text-gray-900 min-w-[200px]"
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="pl-10 pr-8 py-3 bg-slate-800/50 backdrop-blur-sm border border-blue-400/30 rounded-xl focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all appearance-none text-white min-w-[200px] dark:bg-slate-700/50 dark:border-blue-300/30"
             >
               {categories.map(category => (
-                <option key={category.value} value={category.value} className="bg-slate-800 dark:bg-slate-800 light:bg-white text-white dark:text-white light:text-gray-900">
+                <option key={category.value} value={category.value} className="bg-slate-800 text-white dark:bg-slate-700">
                   {category.label}
                 </option>
               ))}
@@ -183,10 +154,9 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
           {filteredTemplates.map((template, index) => (
             <div
               key={template.id}
-              className="group relative bg-slate-800/50 dark:bg-slate-800/50 light:bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-blue-500/20 dark:hover:shadow-blue-500/20 light:hover:shadow-blue-500/10 transition-all duration-300 transform hover:-translate-y-2 overflow-hidden animate-fade-in border border-blue-400/20 dark:border-blue-400/20 light:border-blue-200 hover:border-blue-400/40 dark:hover:border-blue-400/40 light:hover:border-blue-300 cursor-pointer"
+              className="group relative bg-slate-800/50 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-300 transform hover:-translate-y-2 overflow-hidden animate-fade-in border border-blue-400/20 hover:border-blue-400/40 cursor-pointer dark:bg-slate-700/50 dark:border-blue-300/20 dark:hover:border-blue-300/40"
               style={{ animationDelay: `${index * 100}ms` }}
               onClick={(e) => handleTemplateClick(template, e)}
-              onMouseEnter={() => handleTemplateView(template)}
             >
               {/* Image */}
               <div className="relative overflow-hidden">
@@ -201,7 +171,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
                 <div className="absolute top-4 right-4">
                   <div className="bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center space-x-1 shadow-lg">
                     <Euro className="h-3 w-3" />
-                    <span>{template.price} {t('common.currency')}</span>
+                    <span>{template.price}</span>
                   </div>
                 </div>
                 
@@ -212,7 +182,6 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
                       className="bg-slate-800/90 backdrop-blur-sm text-blue-400 p-3 rounded-full hover:bg-slate-800 transition-colors border border-blue-400/30"
                       onClick={(e) => {
                         e.stopPropagation();
-                        trackEvent('template_preview', 'gallery', template.name);
                         console.log('Preview clicked for:', template.name);
                       }}
                     >
@@ -222,7 +191,6 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
                       className="bg-slate-800/90 backdrop-blur-sm text-pink-400 p-3 rounded-full hover:bg-slate-800 transition-colors border border-pink-400/30"
                       onClick={(e) => {
                         e.stopPropagation();
-                        trackEvent('template_favorite', 'gallery', template.name);
                         console.log('Favorite clicked for:', template.name);
                       }}
                     >
@@ -235,12 +203,15 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
               {/* Content */}
               <div className="p-6">
                 <div className="flex items-start justify-between mb-2">
-                  <h3 className="text-lg font-semibold text-white dark:text-white light:text-gray-900">{template.name}</h3>
+                  <h3 className="text-lg font-semibold text-white">{template.name}</h3>
                   <div className="text-right">
-                    <div className="text-xl font-bold text-green-400 dark:text-green-400 light:text-green-600">{template.price} {t('common.currency')}</div>
+                    <div className="text-xl font-bold text-green-400 flex items-center">
+                      <Euro className="h-4 w-4 mr-1" />
+                      {template.price}
+                    </div>
                   </div>
                 </div>
-                <p className="text-gray-400 dark:text-gray-400 light:text-gray-600 text-sm mb-4">{template.description}</p>
+                <p className="text-gray-400 text-sm mb-4 dark:text-gray-300">{template.description}</p>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -251,15 +222,15 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
                   <div className="absolute inset-0 bg-white/10 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
                   <span className="relative z-10 flex items-center justify-center space-x-2">
                     <ShoppingCart className="h-4 w-4" />
-                    <span>{t('gallery.customize')}</span>
+                    <span>Personaliziraj i kupi</span>
                   </span>
                 </button>
               </div>
 
               {/* Category Badge */}
               <div className="absolute top-4 left-4">
-                <span className="bg-slate-800/90 dark:bg-slate-800/90 light:bg-white/90 backdrop-blur-sm text-blue-400 dark:text-blue-400 light:text-blue-600 px-3 py-1 rounded-full text-xs font-medium capitalize border border-blue-400/30 dark:border-blue-400/30 light:border-blue-200">
-                  {categories.find(cat => cat.value === template.category)?.label || template.category}
+                <span className="bg-slate-800/90 backdrop-blur-sm text-blue-400 px-3 py-1 rounded-full text-xs font-medium capitalize border border-blue-400/30">
+                  {template.category}
                 </span>
               </div>
 
@@ -272,11 +243,11 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
         {/* No Results */}
         {filteredTemplates.length === 0 && (
           <div className="text-center py-16">
-            <div className="text-gray-400 dark:text-gray-400 light:text-gray-500 mb-4">
-              <Zap className="h-16 w-16 mx-auto text-blue-400/50 dark:text-blue-400/50 light:text-blue-500/50" />
+            <div className="text-gray-400 mb-4">
+              <Zap className="h-16 w-16 mx-auto text-blue-400/50" />
             </div>
-            <h3 className="text-xl font-semibold text-white dark:text-white light:text-gray-900 mb-2">{t('gallery.noResults')}</h3>
-            <p className="text-gray-400 dark:text-gray-400 light:text-gray-600">{t('gallery.noResultsDesc')}</p>
+            <h3 className="text-xl font-semibold text-white mb-2">Nema rezultata</h3>
+            <p className="text-gray-400 dark:text-gray-300">Pokušajte s drugačijim pojmovima pretrage ili kategorijom.</p>
           </div>
         )}
       </div>
