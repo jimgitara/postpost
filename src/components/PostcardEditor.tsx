@@ -3,6 +3,7 @@ import { ArrowLeft, Type, Palette, Send, Download, Calendar, FileSignature as Si
 import { PostcardTemplate, PostcardCustomization } from '../types';
 import { sendPostcard, generatePostcardCanvasDirectly } from '../services/emailService';
 import { cartService } from '../services/cartService';
+import { useApp } from '../contexts/AppContext';
 
 interface PostcardEditorProps {
   template: PostcardTemplate;
@@ -21,6 +22,8 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
   const [sendSuccess, setSendSuccess] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
+  const { t } = useApp();
+  
   const [customization, setCustomization] = useState<PostcardCustomization>({
     frontText: 'Pozdrav iz prekrasnog mjesta!',
     frontTextColor: '#ffffff',
@@ -258,7 +261,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
       {/* Postcard Preview */}
       <div className="lg:col-span-2 space-y-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-semibold text-gray-900">Live pregled razglednice</h3>
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white light:text-gray-900">Live pregled razglednice</h3>
           <div className="flex items-center space-x-4">
             {autoSaved && (
               <div className="flex items-center space-x-2 text-green-600 text-sm">
@@ -268,7 +271,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
             )}
             <button
               onClick={() => setShowBack(!showBack)}
-              className="flex items-center space-x-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-all"
+              className="flex items-center space-x-2 bg-gray-100 dark:bg-slate-700 light:bg-gray-100 text-gray-700 dark:text-gray-300 light:text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 light:hover:bg-gray-200 transition-all"
             >
               <RotateCcw className="h-4 w-4" />
               <span>{showBack ? 'Prednja strana' : 'Stražnja strana'}</span>
@@ -360,25 +363,25 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
       </div>
 
       {/* Customization Controls Sidebar */}
-      <div className="space-y-6 bg-white rounded-2xl shadow-lg p-6">
+      <div className="space-y-6 bg-white dark:bg-slate-800 light:bg-white rounded-2xl shadow-lg p-6">
         <div className="flex items-center justify-between">
-          <h3 className="text-xl font-semibold text-gray-900">Personaliziraj tekst</h3>
+          <h3 className="text-xl font-semibold text-gray-900 dark:text-white light:text-gray-900">Personaliziraj tekst</h3>
           <div className="flex items-center space-x-1 text-green-600 font-semibold">
             <Euro className="h-4 w-4" />
-            <span>{template.price} kn</span>
+            <span>{template.price} {t('common.currency')}</span>
           </div>
         </div>
         
         {/* Text Input */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 light:text-gray-700 mb-2">
             <Type className="inline h-4 w-4 mr-1" />
             Tekst na razglednici
           </label>
           <textarea
             value={customization.frontText}
             onChange={(e) => updateCustomization({ frontText: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none"
+            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 light:border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all resize-none bg-white dark:bg-slate-700 light:bg-white text-gray-900 dark:text-white light:text-gray-900"
             rows={3}
             placeholder="Unesite svoj tekst..."
           />
@@ -386,7 +389,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
 
         {/* Font Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Font</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 light:text-gray-700 mb-2">Font</label>
           <div className="grid grid-cols-2 gap-2">
             {fonts.map(font => (
               <button
@@ -395,7 +398,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
                 className={`p-3 rounded-lg border transition-all text-sm ${
                   customization.frontTextFont === font.value
                     ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : 'border-gray-200 hover:border-gray-300'
+                    : 'border-gray-200 dark:border-gray-600 light:border-gray-200 hover:border-gray-300 dark:hover:border-gray-500 light:hover:border-gray-300 bg-white dark:bg-slate-700 light:bg-white text-gray-900 dark:text-white light:text-gray-900'
                 } ${font.className}`}
               >
                 {font.label}
@@ -406,7 +409,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
 
         {/* Text Size */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Veličina teksta</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 light:text-gray-700 mb-2">Veličina teksta</label>
           <div className="grid grid-cols-2 gap-2">
             {textSizes.map(size => (
               <button
@@ -415,7 +418,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
                 className={`p-3 rounded-lg border transition-all text-sm ${
                   customization.frontTextSize === size.value
                     ? 'border-primary-500 bg-primary-50 text-primary-700'
-                    : 'border-gray-200 hover:border-gray-300'
+                    : 'border-gray-200 dark:border-gray-600 light:border-gray-200 hover:border-gray-300 dark:hover:border-gray-500 light:hover:border-gray-300 bg-white dark:bg-slate-700 light:bg-white text-gray-900 dark:text-white light:text-gray-900'
                 }`}
               >
                 {size.label}
@@ -426,7 +429,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
 
         {/* Text Color */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 light:text-gray-700 mb-2">
             <Palette className="inline h-4 w-4 mr-1" />
             Boja teksta
           </label>
@@ -470,14 +473,14 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
             ) : (
               <>
                 <ShoppingCart className="h-4 w-4" />
-                <span>Dodaj u košaricu ({template.price} kn)</span>
+                <span>Dodaj u košaricu ({template.price} {t('common.currency')})</span>
               </>
             )}
           </button>
           <button
             onClick={handleDownload}
             disabled={isCapturing}
-            className="flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center space-x-2 bg-gray-100 dark:bg-slate-600 light:bg-gray-100 text-gray-700 dark:text-gray-300 light:text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-slate-500 light:hover:bg-gray-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isCapturing ? (
               <>
@@ -504,15 +507,15 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
 
   const renderMessageStep = () => (
     <div className="max-w-2xl mx-auto space-y-6">
-      <h3 className="text-2xl font-semibold text-gray-900 text-center">Napišite poruku</h3>
+      <h3 className="text-2xl font-semibold text-gray-900 dark:text-white light:text-gray-900 text-center">Napišite poruku</h3>
       
-      <div className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
+      <div className="bg-white dark:bg-slate-800 light:bg-white rounded-2xl shadow-lg p-8 space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Osobna poruka</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 light:text-gray-700 mb-2">Osobna poruka</label>
           <textarea
             value={customization.message}
             onChange={(e) => updateCustomization({ message: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 light:border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-white dark:bg-slate-700 light:bg-white text-gray-900 dark:text-white light:text-gray-900"
             rows={6}
             placeholder="Napišite svoju osobnu poruku..."
             maxLength={500}
@@ -523,7 +526,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 light:text-gray-700 mb-2">
             <Signature className="inline h-4 w-4 mr-1" />
             Potpis
           </label>
@@ -531,7 +534,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
             type="text"
             value={customization.signature}
             onChange={(e) => updateCustomization({ signature: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 light:border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-white dark:bg-slate-700 light:bg-white text-gray-900 dark:text-white light:text-gray-900"
             placeholder="Vaš potpis..."
           />
         </div>
@@ -539,7 +542,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
         <div className="flex space-x-4">
           <button
             onClick={() => setStep('customize')}
-            className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-all"
+            className="flex-1 bg-gray-100 dark:bg-slate-600 light:bg-gray-100 text-gray-700 dark:text-gray-300 light:text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-slate-500 light:hover:bg-gray-200 transition-all"
           >
             ← Natrag
           </button>
@@ -556,17 +559,17 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
 
   const renderSendStep = () => (
     <div className="max-w-2xl mx-auto space-y-6">
-      <h3 className="text-2xl font-semibold text-gray-900 text-center">Pošaljite razglednicu</h3>
+      <h3 className="text-2xl font-semibold text-gray-900 dark:text-white light:text-gray-900 text-center">Pošaljite razglednicu</h3>
       
-      <div className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
+      <div className="bg-white dark:bg-slate-800 light:bg-white rounded-2xl shadow-lg p-8 space-y-6">
         {/* Success Message */}
         {sendSuccess && (
-          <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-            <div className="flex items-center space-x-2 text-green-800">
+          <div className="bg-green-50 dark:bg-green-900/20 light:bg-green-50 border border-green-200 dark:border-green-700 light:border-green-200 rounded-xl p-4">
+            <div className="flex items-center space-x-2 text-green-800 dark:text-green-300 light:text-green-800">
               <CheckCircle className="h-5 w-5" />
               <span className="font-medium">✅ Razglednica je uspješno poslana!</span>
             </div>
-            <p className="text-green-600 text-sm mt-1">
+            <p className="text-green-600 dark:text-green-400 light:text-green-600 text-sm mt-1">
               Primatelj će uskoro dobiti vašu prekrasnu razglednicu na email adresi {customization.recipientEmail}
             </p>
           </div>
@@ -574,23 +577,23 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
 
         {/* Error Message */}
         {sendError && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-            <div className="flex items-center space-x-2 text-red-800">
+          <div className="bg-red-50 dark:bg-red-900/20 light:bg-red-50 border border-red-200 dark:border-red-700 light:border-red-200 rounded-xl p-4">
+            <div className="flex items-center space-x-2 text-red-800 dark:text-red-300 light:text-red-800">
               <AlertCircle className="h-5 w-5" />
               <span className="font-medium">Greška:</span>
             </div>
-            <p className="text-red-600 text-sm mt-1">{sendError}</p>
+            <p className="text-red-600 dark:text-red-400 light:text-red-600 text-sm mt-1">{sendError}</p>
           </div>
         )}
 
         {/* Capturing Status */}
         {isCapturing && (
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+          <div className="bg-blue-50 dark:bg-blue-900/20 light:bg-blue-50 border border-blue-200 dark:border-blue-700 light:border-blue-200 rounded-xl p-4">
             <div className="flex items-center space-x-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-              <span className="text-blue-800 font-medium">⚡ INSTANT kreiranje razglednice...</span>
+              <span className="text-blue-800 dark:text-blue-300 light:text-blue-800 font-medium">⚡ INSTANT kreiranje razglednice...</span>
             </div>
-            <p className="text-blue-600 text-sm mt-1">
+            <p className="text-blue-600 dark:text-blue-400 light:text-blue-600 text-sm mt-1">
               Canvas API - bez čekanja!
             </p>
           </div>
@@ -598,23 +601,23 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Ime primatelja *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 light:text-gray-700 mb-2">Ime primatelja *</label>
             <input
               type="text"
               value={customization.recipientName}
               onChange={(e) => updateCustomization({ recipientName: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 light:border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-white dark:bg-slate-700 light:bg-white text-gray-900 dark:text-white light:text-gray-900"
               placeholder="Ime primatelja"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Email primatelja *</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 light:text-gray-700 mb-2">Email primatelja *</label>
             <input
               type="email"
               value={customization.recipientEmail}
               onChange={(e) => updateCustomization({ recipientEmail: e.target.value })}
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+              className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 light:border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-white dark:bg-slate-700 light:bg-white text-gray-900 dark:text-white light:text-gray-900"
               placeholder="email@primjer.com"
               required
             />
@@ -622,19 +625,19 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Vaše ime *</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 light:text-gray-700 mb-2">Vaše ime *</label>
           <input
             type="text"
             value={customization.senderName}
             onChange={(e) => updateCustomization({ senderName: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 light:border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-white dark:bg-slate-700 light:bg-white text-gray-900 dark:text-white light:text-gray-900"
             placeholder="Vaše ime"
             required
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 light:text-gray-700 mb-2">
             <Calendar className="inline h-4 w-4 mr-1" />
             Zakaži slanje (opcionalno)
           </label>
@@ -642,7 +645,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
             type="datetime-local"
             value={customization.scheduledDate || ''}
             onChange={(e) => updateCustomization({ scheduledDate: e.target.value })}
-            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
+            className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 light:border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all bg-white dark:bg-slate-700 light:bg-white text-gray-900 dark:text-white light:text-gray-900"
           />
           <div className="text-xs text-gray-500 mt-1">
             Ostavite prazno za trenutno slanje
@@ -650,12 +653,12 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
         </div>
 
         {/* Delivery Estimate */}
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <div className="flex items-center space-x-2 text-blue-800">
+        <div className="bg-blue-50 dark:bg-blue-900/20 light:bg-blue-50 border border-blue-200 dark:border-blue-700 light:border-blue-200 rounded-xl p-4">
+          <div className="flex items-center space-x-2 text-blue-800 dark:text-blue-300 light:text-blue-800">
             <Zap className="h-4 w-4" />
             <span className="font-medium">⚡ INSTANT dostava putem emaila</span>
           </div>
-          <p className="text-blue-600 text-sm mt-1">
+          <p className="text-blue-600 dark:text-blue-400 light:text-blue-600 text-sm mt-1">
             Canvas API omogućuje instant kreiranje razglednice bez čekanja. Email će biti poslan odmah!
           </p>
         </div>
@@ -663,7 +666,7 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
         <div className="flex space-x-4">
           <button
             onClick={() => setStep('message')}
-            className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 transition-all"
+            className="flex-1 bg-gray-100 dark:bg-slate-600 light:bg-gray-100 text-gray-700 dark:text-gray-300 light:text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-200 dark:hover:bg-slate-500 light:hover:bg-gray-200 transition-all"
             disabled={isSending}
           >
             ← Natrag
@@ -696,13 +699,13 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
   );
 
   return (
-    <div className="min-h-screen py-8 bg-gray-50">
+    <div className="min-h-screen py-8 bg-gray-50 dark:bg-slate-900 light:bg-gray-50 transition-colors duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <button
             onClick={onBack}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
+            className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 light:text-gray-600 hover:text-gray-900 dark:hover:text-gray-200 light:hover:text-gray-900 transition-colors"
           >
             <ArrowLeft className="h-5 w-5" />
             <span>Natrag na galeriju</span>
@@ -715,22 +718,22 @@ const PostcardEditor: React.FC<PostcardEditorProps> = ({ template, onBack }) => 
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
                   step === stepName ? 'bg-primary-500 text-white' : 
                   ['customize', 'message', 'send'].indexOf(step) > index ? 'bg-green-500 text-white' : 
-                  'bg-gray-200 text-gray-600'
+                  'bg-gray-200 dark:bg-gray-700 light:bg-gray-200 text-gray-600 dark:text-gray-400 light:text-gray-600'
                 }`}>
                   {index + 1}
                 </div>
                 {index < 2 && (
                   <div className={`w-8 h-0.5 mx-2 transition-all ${
-                    ['customize', 'message', 'send'].indexOf(step) > index ? 'bg-green-500' : 'bg-gray-200'
+                    ['customize', 'message', 'send'].indexOf(step) > index ? 'bg-green-500' : 'bg-gray-200 dark:bg-gray-700 light:bg-gray-200'
                   }`}></div>
                 )}
               </div>
             ))}
           </div>
 
-          <div className="text-sm text-gray-500 flex items-center space-x-2">
+          <div className="text-sm text-gray-500 dark:text-gray-400 light:text-gray-500 flex items-center space-x-2">
             <Euro className="h-4 w-4 text-green-500" />
-            <span>{template.price} kn</span>
+            <span>{template.price} {t('common.currency')}</span>
           </div>
         </div>
 

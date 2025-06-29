@@ -141,7 +141,7 @@ const translations = {
     'common.price': 'Cijena',
     'common.total': 'Ukupno',
     'common.quantity': 'Količina',
-    'common.currency': 'kn',
+    'common.currency': 'EUR',
   },
   en: {
     // Header
@@ -301,13 +301,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     localStorage.setItem('retropost_theme', theme);
     
     // Update document class for theme
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-      document.documentElement.classList.remove('light');
-    } else {
-      document.documentElement.classList.add('light');
-      document.documentElement.classList.remove('dark');
-    }
+    document.documentElement.className = ''; // Clear all classes first
+    document.documentElement.classList.add(theme);
     
     // Track theme change
     if (previousTheme && previousTheme !== theme) {

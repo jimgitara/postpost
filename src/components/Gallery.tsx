@@ -21,7 +21,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
       image: 'https://images.pexels.com/photos/457882/pexels-photo-457882.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'priroda',
       description: t('gallery.nature') === 'Nature' ? 'Beautiful tropical beach with crystal clear water' : 'Prekrasna tropska plaža s kristalno čistim morem',
-      price: 15
+      price: 5
     },
     {
       id: '2',
@@ -29,7 +29,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
       image: 'https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'priroda',
       description: t('gallery.nature') === 'Nature' ? 'Spectacular view from mountain peak' : 'Spektakularan pogled s planinskog vrha',
-      price: 18
+      price: 6
     },
     {
       id: '3',
@@ -37,7 +37,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
       image: 'https://images.pexels.com/photos/378570/pexels-photo-378570.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'grad',
       description: t('gallery.cities') === 'Cities' ? 'Modern city panorama at dusk' : 'Moderna gradska panorama u sumrak',
-      price: 20
+      price: 7
     },
     {
       id: '4',
@@ -45,7 +45,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
       image: 'https://images.pexels.com/photos/206359/pexels-photo-206359.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'romantika',
       description: t('gallery.romance') === 'Romance' ? 'Magical sunset over the sea' : 'Čaroban zalazak sunca nad morem',
-      price: 22
+      price: 8
     },
     {
       id: '5',
@@ -53,7 +53,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
       image: 'https://images.pexels.com/photos/33109/fall-autumn-red-season.jpg?auto=compress&cs=tinysrgb&w=800',
       category: 'priroda',
       description: t('gallery.nature') === 'Nature' ? 'Colorful autumn forest in full glory' : 'Šarena jesenska šuma u punoj slavi',
-      price: 16
+      price: 5
     },
     {
       id: '6',
@@ -61,7 +61,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
       image: 'https://images.pexels.com/photos/1032650/pexels-photo-1032650.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'priroda',
       description: t('gallery.nature') === 'Nature' ? 'Peaceful lake surrounded by mountains' : 'Spokojno jezero okruženo planinama',
-      price: 17
+      price: 6
     },
     {
       id: '7',
@@ -69,7 +69,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
       image: 'https://images.pexels.com/photos/936722/pexels-photo-936722.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'grad',
       description: t('gallery.cities') === 'Cities' ? 'Modern urban design and architecture' : 'Moderni urbani dizajn i arhitektura',
-      price: 19
+      price: 7
     },
     {
       id: '8',
@@ -77,7 +77,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
       image: 'https://images.pexels.com/photos/1118873/pexels-photo-1118873.jpeg?auto=compress&cs=tinysrgb&w=800',
       category: 'priroda',
       description: t('gallery.nature') === 'Nature' ? 'Beautiful flower garden in spring' : 'Prekrasan cvijetni vrt u proljeće',
-      price: 14
+      price: 4
     }
   ];
 
@@ -128,7 +128,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
   };
 
   return (
-    <section id="gallery" className="py-20 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 dark:bg-gradient-to-br dark:from-slate-900 dark:via-blue-900 dark:to-slate-900 light:bg-gradient-to-br light:from-gray-50 light:via-blue-50 light:to-purple-50 relative overflow-hidden transition-colors duration-300">
+    <section id="gallery" className="py-20 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 dark:from-slate-900 dark:via-blue-900 dark:to-slate-900 light:from-gray-50 light:via-blue-50 light:to-purple-50 relative overflow-hidden transition-colors duration-300">
       {/* Background Grid */}
       <div className="absolute inset-0 opacity-10 dark:opacity-10 light:opacity-5 pointer-events-none">
         <div className="absolute inset-0 bg-grid-pattern bg-[size:50px_50px]"></div>
@@ -143,7 +143,7 @@ const Gallery: React.FC<GalleryProps> = ({ onTemplateSelect }) => {
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white dark:text-white light:text-gray-900 mb-4">
             {t('gallery.title')}
-            <span className="bg-gradient-to-r from-blue-400 to-purple-400 dark:bg-gradient-to-r dark:from-blue-400 dark:to-purple-400 light:bg-gradient-to-r light:from-blue-600 light:to-purple-600 bg-clip-text text-transparent"> {t('gallery.titleHighlight')}</span>
+            <span className="bg-gradient-to-r from-blue-400 to-purple-400 dark:from-blue-400 dark:to-purple-400 light:from-blue-600 light:to-purple-600 bg-clip-text text-transparent"> {t('gallery.titleHighlight')}</span>
           </h2>
           <p className="text-xl text-gray-300 dark:text-gray-300 light:text-gray-600 max-w-2xl mx-auto">
             {t('gallery.subtitle')}
