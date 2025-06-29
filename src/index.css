@@ -31,13 +31,13 @@
   transition: none !important;
 }
 
-/* Light mode styles */
+/* Light mode styles - BRIGHTENED! */
 .light {
   color-scheme: light;
 }
 
 .light body {
-  @apply bg-gray-50 text-gray-900;
+  @apply bg-gradient-to-br from-blue-50 via-white to-purple-50 text-gray-900;
 }
 
 /* Dark mode styles */
@@ -133,6 +133,44 @@
   animation: slideUp 0.3s ease-out;
 }
 
+/* Light mode specific improvements */
+.light .bg-slate-800\/50 {
+  @apply bg-white/80;
+}
+
+.light .bg-slate-700\/50 {
+  @apply bg-white/90;
+}
+
+.light .text-gray-300 {
+  @apply text-gray-700;
+}
+
+.light .text-gray-400 {
+  @apply text-gray-600;
+}
+
+.light .border-blue-400\/20 {
+  @apply border-gray-200;
+}
+
+.light .border-blue-400\/30 {
+  @apply border-gray-300;
+}
+
+/* Enhanced light mode backgrounds */
+.light .bg-cyber-gradient {
+  @apply bg-gradient-to-br from-blue-50 via-white to-purple-50;
+}
+
+.light .bg-dark-200\/50 {
+  @apply bg-white/80;
+}
+
+.light .bg-dark-200\/80 {
+  @apply bg-white/90;
+}
+
 /* Debug styles for theme testing */
 html.debug-theme {
   border: 3px solid red !important;
@@ -181,4 +219,22 @@ html.debug-theme.light {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* Light mode icon colors */
+.light .text-yellow-400 {
+  @apply text-yellow-500;
+}
+
+.light .text-blue-600 {
+  @apply text-blue-700;
+}
+
+/* Ensure proper visibility in light mode */
+.light .hover\:bg-slate-800\/50:hover {
+  @apply bg-gray-100;
+}
+
+.light .hover\:bg-gray-100:hover {
+  @apply bg-gray-200;
 }
