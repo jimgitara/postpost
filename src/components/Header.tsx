@@ -10,33 +10,45 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ onStartCreating }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark
 
-  // Check for saved theme preference or default to dark
+  // Initialize theme on component mount
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    console.log('🌙 Header: Initializing theme...');
     
-    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-      setIsDarkMode(true);
-      document.documentElement.classList.add('dark');
-    } else {
-      setIsDarkMode(false);
-      document.documentElement.classList.remove('dark');
-    }
+    // Get saved theme or default to dark
+    const savedTheme = localStorage.getItem('retropost_theme') || 'dark';
+    const isDark = savedTheme === 'dark';
+    
+    console.log('🌙 Header: Saved theme:', savedTheme, 'isDark:', isDark);
+    
+    setIsDarkMode(isDark);
+    
+    // Apply theme to document
+    document.documentElement.classList.remove('dark', 'light');
+    document.documentElement.classList.add(savedTheme);
+    
+    console.log('🌙 Header: Applied theme classes:', document.documentElement.className);
   }, []);
 
   const toggleDarkMode = () => {
+    console.log('🌙 Header: Toggle clicked, current isDarkMode:', isDarkMode);
+    
     const newDarkMode = !isDarkMode;
+    const newTheme = newDarkMode ? 'dark' : 'light';
+    
+    console.log('🌙 Header: Setting new theme:', newTheme);
+    
     setIsDarkMode(newDarkMode);
     
-    if (newDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
+    // Update localStorage
+    localStorage.setItem('retropost_theme', newTheme);
+    
+    // Update document classes
+    document.documentElement.classList.remove('dark', 'light');
+    document.documentElement.classList.add(newTheme);
+    
+    console.log('🌙 Header: Theme updated, new classes:', document.documentElement.className);
   };
 
   const scrollToSection = (sectionId: string) => {
@@ -49,7 +61,7 @@ const Header: React.FC<HeaderProps> = ({ onStartCreating }) => {
 
   return (
     <>
-      <header className="bg-slate-900/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-blue-400/20 dark:bg-slate-800/95 dark:border-blue-300/20">
+      <header className="bg-slate-900/95 dark:bg-slate-900/95 light:bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-blue-400/20 dark:border-blue-400/20 light:border-gray-200 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
             {/* Logo */}
@@ -69,31 +81,31 @@ const Header: React.FC<HeaderProps> = ({ onStartCreating }) => {
             <nav className="hidden md:flex items-center space-x-8">
               <button 
                 onClick={() => scrollToSection('gallery')}
-                className="text-gray-300 hover:text-blue-400 transition-all duration-300 font-medium relative group dark:text-gray-200 dark:hover:text-blue-300"
+                className="text-gray-300 dark:text-gray-300 light:text-gray-700 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-all duration-300 font-medium relative group"
               >
                 Galerija
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full dark:bg-blue-300"></span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-400 dark:bg-blue-400 light:bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
               </button>
               <button 
                 onClick={() => scrollToSection('how-it-works')}
-                className="text-gray-300 hover:text-blue-400 transition-all duration-300 font-medium relative group dark:text-gray-200 dark:hover:text-blue-300"
+                className="text-gray-300 dark:text-gray-300 light:text-gray-700 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-all duration-300 font-medium relative group"
               >
                 Kako funkcionira
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full dark:bg-blue-300"></span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-400 dark:bg-blue-400 light:bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
               </button>
               <button 
                 onClick={() => scrollToSection('about')}
-                className="text-gray-300 hover:text-blue-400 transition-all duration-300 font-medium relative group dark:text-gray-200 dark:hover:text-blue-300"
+                className="text-gray-300 dark:text-gray-300 light:text-gray-700 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-all duration-300 font-medium relative group"
               >
                 O nama
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full dark:bg-blue-300"></span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-400 dark:bg-blue-400 light:bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
               </button>
               <button 
                 onClick={() => scrollToSection('contact')}
-                className="text-gray-300 hover:text-blue-400 transition-all duration-300 font-medium relative group dark:text-gray-200 dark:hover:text-blue-300"
+                className="text-gray-300 dark:text-gray-300 light:text-gray-700 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-all duration-300 font-medium relative group"
               >
                 Kontakt
-                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-400 transition-all duration-300 group-hover:w-full dark:bg-blue-300"></span>
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-blue-400 dark:bg-blue-400 light:bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
               </button>
             </nav>
 
@@ -102,17 +114,23 @@ const Header: React.FC<HeaderProps> = ({ onStartCreating }) => {
               {/* Dark Mode Toggle */}
               <button
                 onClick={toggleDarkMode}
-                className="p-2 text-gray-300 hover:text-blue-400 transition-all duration-300 rounded-lg hover:bg-slate-800/50 dark:text-gray-200 dark:hover:text-blue-300 dark:hover:bg-slate-700/50"
+                className="p-3 text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-all duration-300 rounded-xl hover:bg-slate-800/50 dark:hover:bg-slate-800/50 light:hover:bg-gray-100 group relative"
                 title={isDarkMode ? 'Prebaci na svijetli način' : 'Prebaci na tamni način'}
               >
-                {isDarkMode ? (
-                  <Sun className="h-5 w-5" />
-                ) : (
-                  <Moon className="h-5 w-5" />
-                )}
+                <div className="relative">
+                  {isDarkMode ? (
+                    <Sun className="h-5 w-5 group-hover:rotate-180 transition-transform duration-500" />
+                  ) : (
+                    <Moon className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
+                  )}
+                </div>
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 dark:bg-gray-800 light:bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                  {isDarkMode ? 'Svijetli način' : 'Tamni način'}
+                </div>
               </button>
 
-              <button className="flex items-center space-x-2 text-gray-300 hover:text-pink-400 transition-all duration-300 dark:text-gray-200 dark:hover:text-pink-300">
+              <button className="flex items-center space-x-2 text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-pink-400 dark:hover:text-pink-400 light:hover:text-pink-600 transition-all duration-300">
                 <Mail className="h-4 w-4" />
                 <span>Moje razglednice</span>
               </button>
@@ -132,7 +150,7 @@ const Header: React.FC<HeaderProps> = ({ onStartCreating }) => {
               {/* Mobile Dark Mode Toggle */}
               <button
                 onClick={toggleDarkMode}
-                className="p-2 text-gray-300 hover:text-blue-400 transition-colors dark:text-gray-200 dark:hover:text-blue-300"
+                className="p-2 text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-colors rounded-lg"
                 title={isDarkMode ? 'Prebaci na svijetli način' : 'Prebaci na tamni način'}
               >
                 {isDarkMode ? (
@@ -143,7 +161,7 @@ const Header: React.FC<HeaderProps> = ({ onStartCreating }) => {
               </button>
 
               <button
-                className="p-2 text-gray-300 hover:text-blue-400 transition-colors dark:text-gray-200 dark:hover:text-blue-300"
+                className="p-2 text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-colors"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
               >
                 {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -153,40 +171,40 @@ const Header: React.FC<HeaderProps> = ({ onStartCreating }) => {
 
           {/* Mobile Menu */}
           {isMenuOpen && (
-            <div className="md:hidden py-4 border-t border-blue-400/20 animate-slide-up bg-slate-800/50 backdrop-blur-sm rounded-b-xl dark:bg-slate-700/50 dark:border-blue-300/20">
+            <div className="md:hidden py-4 border-t border-blue-400/20 dark:border-blue-400/20 light:border-gray-200 animate-slide-up bg-slate-800/50 dark:bg-slate-800/50 light:bg-gray-50/95 backdrop-blur-sm rounded-b-xl transition-all duration-300">
               <nav className="flex flex-col space-y-4">
                 <button 
                   onClick={() => scrollToSection('gallery')}
-                  className="text-left text-gray-300 hover:text-blue-400 transition-colors font-medium dark:text-gray-200 dark:hover:text-blue-300"
+                  className="text-left text-gray-300 dark:text-gray-300 light:text-gray-700 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-colors font-medium"
                 >
                   Galerija
                 </button>
                 <button 
                   onClick={() => scrollToSection('how-it-works')}
-                  className="text-left text-gray-300 hover:text-blue-400 transition-colors font-medium dark:text-gray-200 dark:hover:text-blue-300"
+                  className="text-left text-gray-300 dark:text-gray-300 light:text-gray-700 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-colors font-medium"
                 >
                   Kako funkcionira
                 </button>
                 <button 
                   onClick={() => scrollToSection('about')}
-                  className="text-left text-gray-300 hover:text-blue-400 transition-colors font-medium dark:text-gray-200 dark:hover:text-blue-300"
+                  className="text-left text-gray-300 dark:text-gray-300 light:text-gray-700 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-colors font-medium"
                 >
                   O nama
                 </button>
                 <button 
                   onClick={() => scrollToSection('contact')}
-                  className="text-left text-gray-300 hover:text-blue-400 transition-colors font-medium dark:text-gray-200 dark:hover:text-blue-300"
+                  className="text-left text-gray-300 dark:text-gray-300 light:text-gray-700 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-colors font-medium"
                 >
                   Kontakt
                 </button>
                 <div className="flex flex-col space-y-2 pt-2">
-                  <button className="flex items-center space-x-2 text-gray-300 hover:text-pink-400 transition-colors dark:text-gray-200 dark:hover:text-pink-300">
+                  <button className="flex items-center space-x-2 text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-pink-400 dark:hover:text-pink-400 light:hover:text-pink-600 transition-colors">
                     <Mail className="h-4 w-4" />
                     <span>Moje razglednice</span>
                   </button>
                   <button 
                     onClick={() => setIsCartOpen(true)}
-                    className="flex items-center space-x-2 text-gray-300 hover:text-blue-400 transition-colors dark:text-gray-200 dark:hover:text-blue-300"
+                    className="flex items-center space-x-2 text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-colors"
                   >
                     <CartIcon onClick={() => setIsCartOpen(true)} />
                   </button>

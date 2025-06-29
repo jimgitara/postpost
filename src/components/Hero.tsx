@@ -1,6 +1,5 @@
 import React from 'react';
 import { Send, Zap, Sparkles, BrainCircuit as Circuit, Cpu } from 'lucide-react';
-import { useApp } from '../contexts/AppContext';
 
 interface HeroProps {
   onStartCreating: () => void;
@@ -8,10 +7,8 @@ interface HeroProps {
 }
 
 const Hero: React.FC<HeroProps> = ({ onStartCreating, onViewExamples }) => {
-  const { t } = useApp();
-
   return (
-    <section className="relative py-20 lg:py-32 overflow-hidden bg-cyber-gradient dark:bg-cyber-gradient light:bg-gradient-to-br light:from-blue-50 light:via-white light:to-purple-50">
+    <section className="relative py-20 lg:py-32 overflow-hidden bg-cyber-gradient dark:bg-cyber-gradient light:bg-gradient-to-br light:from-blue-50 light:via-white light:to-purple-50 transition-all duration-300">
       {/* Animated Background Grid */}
       <div className="absolute inset-0 opacity-20 dark:opacity-20 light:opacity-10">
         <div className="absolute inset-0 bg-grid-pattern bg-[size:50px_50px] animate-cyber-grid"></div>
@@ -34,20 +31,20 @@ const Hero: React.FC<HeroProps> = ({ onStartCreating, onViewExamples }) => {
           {/* Badge */}
           <div className="inline-flex items-center space-x-2 bg-dark-200/80 dark:bg-dark-200/80 light:bg-white/80 backdrop-blur-sm px-6 py-3 rounded-full border border-neon-blue/30 dark:border-neon-blue/30 light:border-blue-200 mb-8 animate-fade-in group hover:border-neon-blue/60 dark:hover:border-neon-blue/60 light:hover:border-blue-300 transition-all duration-300">
             <Sparkles className="h-4 w-4 text-neon-blue dark:text-neon-blue light:text-blue-500 animate-pulse-neon" />
-            <span className="text-sm font-tech font-medium text-neon-blue dark:text-neon-blue light:text-blue-600">{t('hero.badge')}</span>
+            <span className="text-sm font-tech font-medium text-neon-blue dark:text-neon-blue light:text-blue-600">Besplatno kreiranje i slanje</span>
             <Circuit className="h-4 w-4 text-neon-blue dark:text-neon-blue light:text-blue-500 animate-pulse-neon delay-500" />
           </div>
 
           {/* Main Heading */}
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-cyber font-bold text-white dark:text-white light:text-gray-900 mb-6 animate-slide-up">
-            {t('hero.title')}
-            <span className="bg-neon-gradient dark:bg-neon-gradient light:bg-gradient-to-r light:from-blue-600 light:to-purple-600 bg-clip-text text-transparent animate-glow"> {t('hero.titleHighlight')} </span>
-            {t('hero.titleEnd')}
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-cyber font-bold text-white dark:text-white light:text-gray-900 mb-6 animate-slide-up transition-all duration-300">
+            Kreirajte i pošaljite
+            <span className="bg-neon-gradient dark:bg-neon-gradient light:bg-gradient-to-r light:from-blue-600 light:to-purple-600 bg-clip-text text-transparent animate-glow"> personalizirane </span>
+            digitalne razglednice
           </h1>
 
           {/* Subtitle */}
-          <p className="text-xl md:text-2xl text-gray-300 dark:text-gray-300 light:text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed animate-slide-up delay-100 font-tech">
-            {t('hero.subtitle')}
+          <p className="text-xl md:text-2xl text-gray-300 dark:text-gray-300 light:text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed animate-slide-up delay-100 font-tech transition-all duration-300">
+            Stvorite prekrasne digitalne razglednice s modernim predlošcima i pošaljite ih svojim najdražima u nekoliko klikova.
           </p>
 
           {/* CTA Buttons */}
@@ -58,7 +55,7 @@ const Hero: React.FC<HeroProps> = ({ onStartCreating, onViewExamples }) => {
             >
               <div className="absolute inset-0 bg-white/10 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
               <Send className="h-5 w-5 relative z-10" />
-              <span className="relative z-10">{t('hero.startCreating')}</span>
+              <span className="relative z-10">Počni kreirati</span>
               <Cpu className="h-5 w-5 relative z-10 animate-pulse-neon" />
             </button>
             <button 
@@ -66,7 +63,7 @@ const Hero: React.FC<HeroProps> = ({ onStartCreating, onViewExamples }) => {
               className="group flex items-center space-x-3 bg-dark-200/80 dark:bg-dark-200/80 light:bg-white/80 backdrop-blur-sm text-gray-300 dark:text-gray-300 light:text-gray-700 px-8 py-4 rounded-xl font-tech font-semibold text-lg hover:bg-dark-200 dark:hover:bg-dark-200 light:hover:bg-white hover:text-neon-blue dark:hover:text-neon-blue light:hover:text-blue-600 transition-all duration-300 transform hover:scale-105 border border-neon-blue/30 dark:border-neon-blue/30 light:border-blue-200 hover:border-neon-blue/60 dark:hover:border-neon-blue/60 light:hover:border-blue-300"
             >
               <Zap className="h-5 w-5 group-hover:text-neon-blue dark:group-hover:text-neon-blue light:group-hover:text-blue-600 transition-colors" />
-              <span>{t('hero.viewExamples')}</span>
+              <span>Pogledaj primjere</span>
             </button>
           </div>
 
@@ -77,21 +74,21 @@ const Hero: React.FC<HeroProps> = ({ onStartCreating, onViewExamples }) => {
                 <div className="text-3xl md:text-4xl font-cyber font-bold text-neon-blue dark:text-neon-blue light:text-blue-600 mb-2 group-hover:animate-glow transition-all">50+</div>
                 <div className="absolute inset-0 text-3xl md:text-4xl font-cyber font-bold text-neon-blue/20 dark:text-neon-blue/20 light:text-blue-600/20 blur-sm">50+</div>
               </div>
-              <div className="text-gray-400 dark:text-gray-400 light:text-gray-600 font-tech">{t('hero.stats.templates')}</div>
+              <div className="text-gray-400 dark:text-gray-400 light:text-gray-600 font-tech">Kreativnih predložaka</div>
             </div>
             <div className="text-center group">
               <div className="relative">
                 <div className="text-3xl md:text-4xl font-cyber font-bold text-neon-pink dark:text-neon-pink light:text-purple-600 mb-2 group-hover:animate-glow transition-all">5K+</div>
                 <div className="absolute inset-0 text-3xl md:text-4xl font-cyber font-bold text-neon-pink/20 dark:text-neon-pink/20 light:text-purple-600/20 blur-sm">5K+</div>
               </div>
-              <div className="text-gray-400 dark:text-gray-400 light:text-gray-600 font-tech">{t('hero.stats.users')}</div>
+              <div className="text-gray-400 dark:text-gray-400 light:text-gray-600 font-tech">Zadovoljnih korisnika</div>
             </div>
             <div className="text-center group">
               <div className="relative">
                 <div className="text-3xl md:text-4xl font-cyber font-bold text-neon-green dark:text-neon-green light:text-green-600 mb-2 group-hover:animate-glow transition-all">100%</div>
                 <div className="absolute inset-0 text-3xl md:text-4xl font-cyber font-bold text-neon-green/20 dark:text-neon-green/20 light:text-green-600/20 blur-sm">100%</div>
               </div>
-              <div className="text-gray-400 dark:text-gray-400 light:text-gray-600 font-tech">{t('hero.stats.free')}</div>
+              <div className="text-gray-400 dark:text-gray-400 light:text-gray-600 font-tech">Besplatno</div>
             </div>
           </div>
         </div>

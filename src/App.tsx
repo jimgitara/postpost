@@ -8,18 +8,13 @@ import Contact from './components/Contact';
 import PostcardEditor from './components/PostcardEditor';
 import PhotoUpload from './components/PhotoUpload';
 import Footer from './components/Footer';
-import { AppProvider } from './contexts/AppContext';
-import { usePerformanceTracking } from './hooks/useAnalytics';
 import { PostcardTemplate } from './types';
 
-function AppContent() {
+function App() {
   const [selectedTemplate, setSelectedTemplate] = useState<PostcardTemplate | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [showUpload, setShowUpload] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-
-  // Track performance metrics
-  usePerformanceTracking();
 
   const handleTemplateSelect = (template: PostcardTemplate) => {
     console.log('App: Template selected:', template);
@@ -67,7 +62,7 @@ function AppContent() {
   console.log('App render - showEditor:', showEditor, 'showUpload:', showUpload, 'selectedTemplate:', selectedTemplate);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 dark:bg-gradient-to-br dark:from-slate-900 dark:via-blue-900 dark:to-slate-900 light:bg-gradient-to-br light:from-gray-50 light:via-blue-50 light:to-purple-50 transition-colors duration-300">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 dark:from-slate-900 dark:via-blue-900 dark:to-slate-900 light:from-gray-50 light:via-blue-50 light:to-purple-50 transition-all duration-300">
       <Header onStartCreating={handleStartCreating} />
       
       {!showEditor && !showUpload ? (
@@ -102,14 +97,6 @@ function AppContent() {
       
       <Footer />
     </div>
-  );
-}
-
-function App() {
-  return (
-    <AppProvider>
-      <AppContent />
-    </AppProvider>
   );
 }
 
