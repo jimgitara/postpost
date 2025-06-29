@@ -16,6 +16,16 @@ function App() {
   const [showUpload, setShowUpload] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
+  // Prevent transition flash on initial load
+  useEffect(() => {
+    // Remove no-transition class after initial render
+    const timer = setTimeout(() => {
+      document.body.classList.remove('no-transition');
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleTemplateSelect = (template: PostcardTemplate) => {
     console.log('App: Template selected:', template);
     setSelectedTemplate(template);

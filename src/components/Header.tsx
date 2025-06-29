@@ -10,45 +10,57 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ onStartCreating }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true); // Default to dark
+  const [isDarkMode, setIsDarkMode] = useState(true);
 
-  // Initialize theme on component mount
+  // Initialize theme state on component mount
   useEffect(() => {
-    console.log('🌙 Header: Initializing theme...');
+    console.log('🌙 Header: Initializing theme state...');
     
-    // Get saved theme or default to dark
-    const savedTheme = localStorage.getItem('retropost_theme') || 'dark';
-    const isDark = savedTheme === 'dark';
-    
-    console.log('🌙 Header: Saved theme:', savedTheme, 'isDark:', isDark);
-    
-    setIsDarkMode(isDark);
-    
-    // Apply theme to document
-    document.documentElement.classList.remove('dark', 'light');
-    document.documentElement.classList.add(savedTheme);
-    
-    console.log('🌙 Header: Applied theme classes:', document.documentElement.className);
+    try {
+      const savedTheme = localStorage.getItem('retropost_theme') || 'dark';
+      const isDark = savedTheme === 'dark';
+      
+      console.log('🌙 Header: Current theme:', savedTheme, 'isDark:', isDark);
+      setIsDarkMode(isDark);
+      
+      // Ensure HTML has correct class
+      document.documentElement.classList.remove('dark', 'light');
+      document.documentElement.classList.add(savedTheme);
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      
+    } catch (error) {
+      console.error('❌ Header: Theme initialization failed:', error);
+    }
   }, []);
 
-  const toggleDarkMode = () => {
-    console.log('🌙 Header: Toggle clicked, current isDarkMode:', isDarkMode);
+  // Toggle theme function
+  const toggleTheme = () => {
+    console.log('🌙 Header: Theme toggle clicked, current isDarkMode:', isDarkMode);
     
-    const newDarkMode = !isDarkMode;
-    const newTheme = newDarkMode ? 'dark' : 'light';
-    
-    console.log('🌙 Header: Setting new theme:', newTheme);
-    
-    setIsDarkMode(newDarkMode);
-    
-    // Update localStorage
-    localStorage.setItem('retropost_theme', newTheme);
-    
-    // Update document classes
-    document.documentElement.classList.remove('dark', 'light');
-    document.documentElement.classList.add(newTheme);
-    
-    console.log('🌙 Header: Theme updated, new classes:', document.documentElement.className);
+    try {
+      const newIsDarkMode = !isDarkMode;
+      const newTheme = newIsDarkMode ? 'dark' : 'light';
+      
+      console.log('🌙 Header: Switching to theme:', newTheme);
+      
+      // Update state
+      setIsDarkMode(newIsDarkMode);
+      
+      // Update localStorage
+      localStorage.setItem('retropost_theme', newTheme);
+      
+      // Update HTML classes
+      document.documentElement.classList.remove('dark', 'light');
+      document.documentElement.classList.add(newTheme);
+      document.documentElement.setAttribute('data-theme', newTheme);
+      
+      console.log('✅ Header: Theme updated successfully');
+      console.log('🌙 Header: New HTML classes:', document.documentElement.className);
+      console.log('🌙 Header: New data theme:', document.documentElement.getAttribute('data-theme'));
+      
+    } catch (error) {
+      console.error('❌ Header: Theme toggle failed:', error);
+    }
   };
 
   const scrollToSection = (sectionId: string) => {
@@ -111,24 +123,28 @@ const Header: React.FC<HeaderProps> = ({ onStartCreating }) => {
 
             {/* Action Buttons */}
             <div className="hidden md:flex items-center space-x-4">
-              {/* Dark Mode Toggle */}
-              <button
-                onClick={toggleDarkMode}
-                className="p-3 text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-all duration-300 rounded-xl hover:bg-slate-800/50 dark:hover:bg-slate-800/50 light:hover:bg-gray-100 group relative"
-                title={isDarkMode ? 'Prebaci na svijetli način' : 'Prebaci na tamni način'}
-              >
-                <div className="relative">
-                  {isDarkMode ? (
-                    <Sun className="h-5 w-5 group-hover:rotate-180 transition-transform duration-500" />
-                  ) : (
-                    <Moon className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
-                  )}
-                </div>
+              {/* Dark Mode Toggle - Desktop */}
+              <div className="relative group">
+                <button
+                  onClick={toggleTheme}
+                  className="p-3 text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-all duration-300 rounded-xl hover:bg-slate-800/50 dark:hover:bg-slate-800/50 light:hover:bg-gray-100 relative"
+                  aria-label={isDarkMode ? 'Prebaci na svijetli način' : 'Prebaci na tamni način'}
+                >
+                  <div className="relative">
+                    {isDarkMode ? (
+                      <Sun className="h-5 w-5 group-hover:rotate-180 transition-transform duration-500" />
+                    ) : (
+                      <Moon className="h-5 w-5 group-hover:rotate-12 transition-transform duration-300" />
+                    )}
+                  </div>
+                </button>
+                
                 {/* Tooltip */}
-                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-800 dark:bg-gray-800 light:bg-gray-700 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 dark:bg-gray-800 light:bg-gray-700 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
                   {isDarkMode ? 'Svijetli način' : 'Tamni način'}
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800 dark:border-t-gray-800 light:border-t-gray-700"></div>
                 </div>
-              </button>
+              </div>
 
               <button className="flex items-center space-x-2 text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-pink-400 dark:hover:text-pink-400 light:hover:text-pink-600 transition-all duration-300">
                 <Mail className="h-4 w-4" />
@@ -145,13 +161,13 @@ const Header: React.FC<HeaderProps> = ({ onStartCreating }) => {
               </button>
             </div>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Menu Button & Theme Toggle */}
             <div className="md:hidden flex items-center space-x-2">
               {/* Mobile Dark Mode Toggle */}
               <button
-                onClick={toggleDarkMode}
+                onClick={toggleTheme}
                 className="p-2 text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-colors rounded-lg"
-                title={isDarkMode ? 'Prebaci na svijetli način' : 'Prebaci na tamni način'}
+                aria-label={isDarkMode ? 'Prebaci na svijetli način' : 'Prebaci na tamni način'}
               >
                 {isDarkMode ? (
                   <Sun className="h-5 w-5" />
@@ -163,6 +179,7 @@ const Header: React.FC<HeaderProps> = ({ onStartCreating }) => {
               <button
                 className="p-2 text-gray-300 dark:text-gray-300 light:text-gray-600 hover:text-blue-400 dark:hover:text-blue-400 light:hover:text-blue-600 transition-colors"
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
+                aria-label="Toggle menu"
               >
                 {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
               </button>
